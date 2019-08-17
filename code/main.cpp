@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <cstdint>
 #include <filesystem>
 #include <iostream>
 #include <optional>
@@ -44,6 +45,8 @@ int main()
     SDL_Surface* screen = SDL_GetWindowSurface(window);
 
     // UPDATING.
+    uint32_t milliseconds_since_start = SDL_GetTicks();
+    uint32_t elapsed_time_until_previous_frame = milliseconds_since_start;
     bool quit = false;
     while (!quit)
     {
@@ -64,7 +67,20 @@ int main()
             SDL_MapRGB(screen->format, 0x00, 0x00, 0x00));
         SDL_UpdateWindowSurface(window);
 
-        SDL_Delay(100);
+        constexpr float FRAMES_PER_SECOND = 60.0f;
+        constexpr float SECONDS_PER_FRAME = 1.0f / FRAMES_PER_SECOND;
+        constexpr float MILLISECONDS_PER_SECOND = 1000.0f;
+        constexpr uint32_t MILLISECONDS_PER_FRAME = static_cast<uint32_t>(SECONDS_PER_FRAME * MILLISECONDS_PER_SECOND);
+        uint32_t current_total_milliseconds = SDL_GetTicks();
+        uint32_t elapsed_time_for_current_frame = (current_total_milliseconds - elapsed_time_until_previous_frame);
+        if (elapsed_time_for_current_frame < MILLISECONDS_PER_FRAME)
+        {
+            uint32_t remaining_time_for_frame = MILLISECONDS_PER_FRAME - elapsed_time_for_current_frame;
+            SDL_Delay(remaining_time_for_frame);
+        }
+        std::cout << "Frame Time (ms): " << (SDL_GetTicks() - elapsed_time_until_previous_frame) << std::endl;
+
+        elapsed_time_until_previous_frame = SDL_GetTicks();
     }
 
     // SHUTDOWN.
