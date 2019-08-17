@@ -1,1 +1,2 @@
+#include "BibleData/VersePerLineFile.cpp"
 #include "main.cpp"
