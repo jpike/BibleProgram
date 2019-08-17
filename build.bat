@@ -6,6 +6,9 @@ REM IF %ERRORLEVEL% NEQ 0 CALL "C:\Program Files (x86)\Microsoft Visual Studio\2
 CALL "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
 WHERE cl.exe
 
+SET TOOL_DIRECTORY_PATH="C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.22.27905\bin\Hostx64\x64"
+SET COMPILER_PATH="%TOOL_DIRECTORY_PATH%\cl.exe"
+
 REM READ THE BUILD MODE COMMAND LINE ARGUMENT.
 REM Either "debug" or "release" (no quotes).
 REM If not specified, will default to debug.
@@ -19,12 +22,12 @@ SET RELEASE_COMPILER_OPTIONS=%COMMON_COMPILER_OPTIONS% /O2 /MT
 REM DEFINE FILES TO COMPILE/LINK.
 SET COMPILATION_FILE="..\BibleProgram.project"
 SET MAIN_CODE_DIR="..\code"
-REM SET LIBRARIES=user32.lib gdi32.lib
+SET SDL_DIR=%MAIN_CODE_DIR%"\ThirdParty\SDL"
+SET LIBRARIES=SDL2.lib SDL2main.lib 
 
 REM CREATE THE COMMAND LINE OPTIONS FOR THE FILES TO COMPILE/LINK.
 SET INCLUDE_DIRS=/I %MAIN_CODE_DIR%
-SET PROJECT_FILES_DIRS_AND_LIBS=%COMPILATION_FILE% %INCLUDE_DIRS%
-REM /link %LIBRARIES%
+SET PROJECT_FILES_DIRS_AND_LIBS=%COMPILATION_FILE% %INCLUDE_DIRS% /link %LIBRARIES% /LIBPATH:%SDL_DIR%
 
 REM MOVE INTO THE BUILD DIRECTORY.
 IF NOT EXIST "build" MKDIR "build"
@@ -32,12 +35,15 @@ PUSHD "build"
 
     REM BUILD THE PROGRAM BASED ON THE BUILD MODE.
     IF "%build_mode%"=="release" (
-        "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.22.27905\bin\Hostx64\x64\cl.exe" %RELEASE_COMPILER_OPTIONS% %PROJECT_FILES_DIRS_AND_LIBS%
+        "%COMPILER_PATH%" %RELEASE_COMPILER_OPTIONS% %PROJECT_FILES_DIRS_AND_LIBS%
     ) ELSE (
-        "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.22.27905\bin\Hostx64\x64\cl.exe" %DEBUG_COMPILER_OPTIONS% %PROJECT_FILES_DIRS_AND_LIBS%
+        "%COMPILER_PATH%" %DEBUG_COMPILER_OPTIONS% %PROJECT_FILES_DIRS_AND_LIBS%
     )
 
-    IF %ERRORLEVEL% EQU 0 BibleProgram.exe
+    IF %ERRORLEVEL% EQU 0 (
+        COPY %SDL_DIR%\SDL2.dll SDL2.dll
+        BibleProgram.exe
+    )
 
 POPD
 
