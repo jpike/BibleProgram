@@ -12,7 +12,9 @@
                 "${env.WindowsSdkDir}include/${env.WindowsSDKVersion}/um",
                 "${env.WindowsSdkDir}include/${env.WindowsSDKVersion}/shared",
                 "${env.VCToolsInstallDir}include",
-                "${projectRoot}/code"
+                "${projectRoot}/code",
+                "${projectRoot}/code/gl3w",
+                "${projectRoot}/code/SDL"
             ]
         },
         {
@@ -26,7 +28,9 @@
                 "${env.WindowsSdkDir}include/${env.WindowsSDKVersion}/um",
                 "${env.WindowsSdkDir}include/${env.WindowsSDKVersion}/shared",
                 "${env.VCToolsInstallDir}include",
-                "${projectRoot}/code"
+                "${projectRoot}/code",
+                "${projectRoot}/code/gl3w",
+                "${projectRoot}/code/SDL"
             ]
         }
     ]
