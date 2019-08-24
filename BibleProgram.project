@@ -1,4 +1,7 @@
+#if !__EMSCRIPTEN__
 #include <ThirdParty/gl3w/GL/gl3w.c>
+#endif
+
 #include <ThirdParty/imgui/imgui.cpp>
 #include <ThirdParty/imgui/imgui_demo.cpp>
 #include <ThirdParty/imgui/imgui_draw.cpp>
@@ -6,4 +9,9 @@
 #include <ThirdParty/imgui/imgui_impl_sdl.cpp>
 #include <ThirdParty/imgui/imgui_widgets.cpp>
 #include "BibleData/VersePerLineFile.cpp"
+
+#if __EMSCRIPTEN__
+#include "main_emscripten.cpp"
+#else
 #include "main.cpp"
+#endif
