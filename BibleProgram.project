@@ -8,7 +8,10 @@
 #include <ThirdParty/imgui/imgui_impl_opengl3.cpp>
 #include <ThirdParty/imgui/imgui_impl_sdl.cpp>
 #include <ThirdParty/imgui/imgui_widgets.cpp>
+#include "BibleData/Bible.cpp"
+#include "BibleData/BibleBook.cpp"
 #include "BibleData/VersePerLineFile.cpp"
+#include "Gui/Gui.cpp"
 
 #if __EMSCRIPTEN__
 #include "main_emscripten.cpp"

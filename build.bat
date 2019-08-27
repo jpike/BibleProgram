@@ -41,6 +41,9 @@ PUSHD "build"
     )
 
     IF %ERRORLEVEL% EQU 0 (
+        IF NOT EXIST "data" MKDIR "data"
+        IF NOT EXIST "data\SacredTexts" MKDIR "data\SacredTexts"
+        COPY /Y "..\data\SacredTexts\*.*" "data\SacredTexts\*.*"
         COPY %SDL_DIR%\SDL2.dll SDL2.dll
         BibleProgram.exe
     )

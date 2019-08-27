@@ -11,12 +11,14 @@
 #include <ThirdParty/imgui/imgui_impl_sdl.h>
 #include <ThirdParty/SDL/SDL.h>
 #undef main
+#include "BibleData/Bible.h"
 #include "BibleData/VersePerLineFile.h"
+#include "Gui/Gui.h"
 
 int main()
 {
     // PARSE THE BIBLE DATA.
-    std::optional<BIBLE_DATA::VersePerLineFile> verse_per_line_file = BIBLE_DATA::VersePerLineFile::Parse("../data/SacredTexts/kjvdat.txt");
+    std::optional<BIBLE_DATA::VersePerLineFile> verse_per_line_file = BIBLE_DATA::VersePerLineFile::Parse("data/SacredTexts/kjvdat.txt");
     if (verse_per_line_file)
     {
         std::cout << "Successful parse." << std::endl;
@@ -71,6 +73,9 @@ int main()
         const char* const GLSL_VERSION = "#version 130";
         ImGui_ImplOpenGL3_Init(GLSL_VERSION);
 
+        BIBLE_DATA::Bible bible = BIBLE_DATA::Bible::Populate(verse_per_line_file->Verses);
+        GUI::Gui gui{ .Bible = bible };
+
         // UPDATING.
         bool show_demo_window = true;
 
@@ -94,6 +99,8 @@ int main()
             ImGui_ImplSDL2_NewFrame(window);
             ImGui::NewFrame();
             ImGui::ShowDemoWindow(&show_demo_window);
+
+            gui.UpdateAndRender();
 
             ImGui::Render();
             ImGuiIO& io = ImGui::GetIO();

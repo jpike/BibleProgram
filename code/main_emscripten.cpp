@@ -48,6 +48,18 @@ int main()
 {
     try
     {
+        // PARSE THE BIBLE DATA.
+        std::optional<BIBLE_DATA::VersePerLineFile> verse_per_line_file = BIBLE_DATA::VersePerLineFile::Parse("data/SacredTexts/kjvdat.txt");
+        if (verse_per_line_file)
+        {
+            std::cout << "Successful parse." << std::endl;
+        }
+        else
+        {
+            std::cerr << "Failed parse." << std::endl;
+            return EXIT_FAILURE;
+        }
+
         // INITIALIZE SDL.
         constexpr uint32_t SDL_SUBSYSTEMS = (SDL_INIT_EVENTS | SDL_INIT_TIMER | SDL_INIT_VIDEO);
         constexpr int SDL_SUCCESS_RETURN_CODE = 0;
