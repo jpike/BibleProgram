@@ -12,6 +12,7 @@
 #include <ThirdParty/SDL/SDL.h>
 #undef main
 #include "BibleData/Bible.h"
+#include "BibleData/OsisXmlFile.h"
 #include "BibleData/VersePerLineFile.h"
 #include "Gui/Gui.h"
 
@@ -28,6 +29,10 @@ int main()
         std::cerr << "Failed parse." << std::endl;
         return EXIT_FAILURE;
     }
+
+    std::optional<BIBLE_DATA::OsisXmlFile> bbe_bible_file = BIBLE_DATA::OsisXmlFile::Parse("data/GratisBible/bbe.xml");
+    std::optional<BIBLE_DATA::OsisXmlFile> web_bible_file = BIBLE_DATA::OsisXmlFile::Parse("data/GratisBible/web.xml");
+    std::optional<BIBLE_DATA::OsisXmlFile> ylt_bible_file = BIBLE_DATA::OsisXmlFile::Parse("data/GratisBible/ylt.xml");
 
     // CATCH ANY EXCEPTIONS.
     // A lot of things like SDL functions can easily fail.  To easily catch generic errors, everything's wrapped
@@ -123,7 +128,7 @@ int main()
                 uint32_t remaining_time_in_ms_for_frame = MILLISECONDS_PER_FRAME - elapsed_time_in_ms_for_current_frame;
                 SDL_Delay(remaining_time_in_ms_for_frame);
             }
-            std::cout << "Frame Time (ms): " << (SDL_GetTicks() - elapsed_time_in_ms_until_previous_frame) << std::endl;
+            /// @todo std::cout << "Frame Time (ms): " << (SDL_GetTicks() - elapsed_time_in_ms_until_previous_frame) << std::endl;
             elapsed_time_in_ms_until_previous_frame = SDL_GetTicks();
         }
     }

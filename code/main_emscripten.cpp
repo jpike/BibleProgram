@@ -10,6 +10,7 @@
 #include <ThirdParty/imgui/imgui_impl_sdl.h>
 #include <ThirdParty/SDL/SDL.h>
 #undef main
+#include "BibleData/OsisXmlFile.h"
 #include "BibleData/VersePerLineFile.h"
 
 SDL_Window* g_window = nullptr;
@@ -59,6 +60,10 @@ int main()
             std::cerr << "Failed parse." << std::endl;
             return EXIT_FAILURE;
         }
+
+        std::optional<BIBLE_DATA::OsisXmlFile> bbe_bible_file = BIBLE_DATA::OsisXmlFile::Parse("data/GratisBible/bbe.xml");
+        std::optional<BIBLE_DATA::OsisXmlFile> web_bible_file = BIBLE_DATA::OsisXmlFile::Parse("data/GratisBible/web.xml");
+        std::optional<BIBLE_DATA::OsisXmlFile> ylt_bible_file = BIBLE_DATA::OsisXmlFile::Parse("data/GratisBible/ylt.xml");
 
         // INITIALIZE SDL.
         constexpr uint32_t SDL_SUBSYSTEMS = (SDL_INIT_EVENTS | SDL_INIT_TIMER | SDL_INIT_VIDEO);
