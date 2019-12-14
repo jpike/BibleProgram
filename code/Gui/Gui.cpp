@@ -175,6 +175,30 @@ namespace GUI
                     ImGui::TextWrapped(verse_number_and_content_text.c_str());
                 }
 
+                /*std::string chapter_text;
+                for (auto id_and_verse = chapter_starting_verse; id_and_verse != chapter_after_ending_verse; ++id_and_verse)
+                {
+                    const BIBLE_DATA::BibleVerse& verse = id_and_verse->second;
+                    chapter_text += " " + verse.Text;
+                }
+
+                ImGui::InputTextMultiline(
+                    ("##ChapterVerses" + std::string(translation_name)).c_str(),
+                    // Need to pass pointer to non-const.
+                    const_cast<char*>(chapter_text.c_str()),
+                    chapter_text.size(),
+                    //ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 16),
+                    ImVec2(),
+                    ImGuiInputTextFlags_ReadOnly);*/
+
+                // https://github.com/ocornut/imgui/issues/952
+                // https://github.com/ocornut/imgui/issues/902
+                // https://github.com/ocornut/imgui/issues/986
+                // https://github.com/ocornut/imgui/issues/200
+                // https://github.com/ocornut/imgui/issues/2728
+                // https://github.com/ocornut/imgui/issues/950
+                // https://github.com/BalazsJako/ImGuiColorTextEdit
+
                 ImGui::NextColumn();
             }
 
