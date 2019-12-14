@@ -10,8 +10,59 @@ namespace GUI
         static bool show_style_editor = false;
         static bool show_about = false;
 
+        static bool translation_mapped_initialized = false;
+        static std::map<const char*, bool> translation_enabled_status_by_name;
+
+        static std::vector<const char*> available_translation_names;
+
+        if (!translation_mapped_initialized)
+        {
+            for (const auto& name_and_translation : Bible.TranslationsByName)
+            {
+                const char* translation_name = name_and_translation.first.c_str();
+                available_translation_names.push_back(translation_name);
+
+                /// @todo   Figure out when to initialize this.
+                bool translation_status_exists = translation_enabled_status_by_name.contains(translation_name);
+                if (!translation_status_exists)
+                {
+                    translation_enabled_status_by_name[translation_name] = true;
+                }
+            }
+        }
+        static const char* current_translation_name = available_translation_names[0];
+        translation_mapped_initialized = true;
+
         if (ImGui::BeginMainMenuBar())
         {
+            if (ImGui::BeginMenu("Translations"))
+            {
+                if (ImGui::BeginCombo("Primary Translation", current_translation_name))
+                {
+                    for (const auto& translation_name : available_translation_names)
+                    {
+                        bool is_selected = (translation_name == current_translation_name);
+                        if (ImGui::Selectable(translation_name, is_selected))
+                        {
+                            current_translation_name = translation_name;
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
+             
+                
+                for (const auto& translation_name : available_translation_names)
+                {
+                    bool translation_enabled = translation_enabled_status_by_name[translation_name];
+                    if (ImGui::MenuItem(translation_name, NULL, translation_enabled))
+                    {
+                        translation_enabled_status_by_name[translation_name] = !translation_enabled;
+                    }
+                }
+
+                ImGui::EndMenu();
+            }
+
             if (ImGui::BeginMenu("Debug"))
             {
                 ImGui::MenuItem("Metrics", nullptr, &show_metrics);
@@ -64,28 +115,71 @@ namespace GUI
         if (selected_chapter)
         {
             ImGui::Begin("Chapter Window");
-            const auto current_translation = Bible.TranslationsByName["KJV"];
-            BIBLE_DATA::BibleVerseId chapter_starting_verse_id =
+
+            unsigned int enabled_translation_count = 0;
+            for (const auto& translation_name : available_translation_names)
             {
-                .Book = selected_chapter->Book,
-                .ChapterNumber = selected_chapter->Number,
-                .VerseNumber = 1
-            };
-            const auto chapter_starting_verse = current_translation.VersesById.lower_bound(chapter_starting_verse_id);
-            BIBLE_DATA::BibleVerseId chapter_ending_verse_id =
-            {
-                .Book = selected_chapter->Book,
-                .ChapterNumber = selected_chapter->Number,
-                .VerseNumber = selected_chapter->VerseCount
-            };
-            const auto chapter_after_ending_verse = current_translation.VersesById.upper_bound(chapter_ending_verse_id);
-            for (auto id_and_verse = chapter_starting_verse; id_and_verse != chapter_after_ending_verse; ++id_and_verse)
-            {
-                const BIBLE_DATA::BibleVerse& verse = id_and_verse->second;
-                std::string verse_number_text = std::to_string(verse.Id.VerseNumber);
-                //ImGui::InputTextMultiline(verse_number_text.c_str(), const_cast<char *>(verse.Text.c_str()), verse.Text.length(), ImVec2(), ImGuiInputTextFlags_ReadOnly);
-                ImGui::TextWrapped(verse.Text.c_str());
+                bool translation_enabled = translation_enabled_status_by_name[translation_name];
+                if (translation_enabled)
+                {
+                    ++enabled_translation_count;
+                }
             }
+
+            ImGui::Columns(enabled_translation_count, "Translation Columns");
+
+            for (const auto& translation_name : available_translation_names)
+            {
+                bool translation_enabled = translation_enabled_status_by_name[translation_name];
+                if (translation_enabled)
+                {
+                    ImGui::Text(translation_name);
+                    ImGui::NextColumn();
+                }
+            }
+
+            ImGui::Separator();
+
+            for (const auto& translation_name : available_translation_names)
+            {
+                bool translation_enabled = translation_enabled_status_by_name[translation_name];
+                if (!translation_enabled)
+                {
+                    continue;
+                }
+
+                const auto current_translation = Bible.TranslationsByName[translation_name];
+
+                BIBLE_DATA::BibleVerseId chapter_starting_verse_id =
+                {
+                    .Book = selected_chapter->Book,
+                    .ChapterNumber = selected_chapter->Number,
+                    .VerseNumber = 1
+                };
+                const auto chapter_starting_verse = current_translation.VersesById.lower_bound(chapter_starting_verse_id);
+                BIBLE_DATA::BibleVerseId chapter_ending_verse_id =
+                {
+                    .Book = selected_chapter->Book,
+                    .ChapterNumber = selected_chapter->Number,
+                    .VerseNumber = selected_chapter->VerseCount
+                };
+                const auto chapter_after_ending_verse = current_translation.VersesById.upper_bound(chapter_ending_verse_id);
+                for (auto id_and_verse = chapter_starting_verse; id_and_verse != chapter_after_ending_verse; ++id_and_verse)
+                {
+                    const BIBLE_DATA::BibleVerse& verse = id_and_verse->second;
+                    std::string verse_number_text = std::to_string(verse.Id.VerseNumber);
+                    //ImGui::InputTextMultiline(verse_number_text.c_str(), const_cast<char *>(verse.Text.c_str()), verse.Text.length(), ImVec2(), ImGuiInputTextFlags_ReadOnly);
+
+                    std::string verse_number_and_content_text = verse_number_text + ": " + verse.Text;
+
+                    ImGui::TextWrapped(verse_number_and_content_text.c_str());
+                }
+
+                ImGui::NextColumn();
+            }
+
+            ImGui::Columns(1);
+
             ImGui::End();
         }
     }

@@ -2,7 +2,7 @@
 
 #include <string>
 #include <vector>
-#include <unordered_map>
+#include <map>
 #include "BibleData/BibleBook.h"
 #include "BibleData/BibleTranslation.h"
 #include "BibleData/BibleVerse.h"
@@ -17,8 +17,10 @@ namespace BIBLE_DATA
 
         /// The books in the Bible, mapped by their IDs.
         /// This member variable defines the overall organizational structure, rather than content, of the Bible.
+        /// An ordered map is used for automatic sorting.
         std::map<BibleBookId, BibleBook> BooksById = {};
         /// A mapping of translation names to the content of the actual translations.
-        std::unordered_map<std::string, BibleTranslation> TranslationsByName = {};
+        /// An ordered, rather than unordered map, to support automatic alphabetic sorting.
+        std::map<std::string, BibleTranslation> TranslationsByName = {};
     };
 }
