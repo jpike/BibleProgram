@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include "BibleData/BibleBookId.h"
 #include "BibleData/BibleChapter.h"
 #include "BibleData/BibleVerse.h"
 
@@ -11,10 +12,11 @@ namespace BIBLE_DATA
     class BibleBook
     {
     public:
-        void Add(const BibleVerse& verse);
+        static BibleBookId GetId(const std::string& book_name_or_abbreviation);
+        static std::string FullName(const BibleBookId book_id);
 
-        /// The name (title) of the book.
-        std::string Name = "";
+        /// The ID of the book.
+        BibleBookId Id = BibleBookId::INVALID;
         /// The chapters in the book.
         std::vector<BibleChapter> Chapters = {};
     };

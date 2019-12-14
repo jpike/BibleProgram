@@ -11,6 +11,8 @@
 #include <ThirdParty/pugixml/pugixml.cpp>
 #include "BibleData/Bible.cpp"
 #include "BibleData/BibleBook.cpp"
+#include "BibleData/BibleDataFiles.cpp"
+#include "BibleData/BibleTranslation.cpp"
 #include "BibleData/OsisXmlFile.cpp"
 #include "BibleData/VersePerLineFile.cpp"
 #include "Gui/Gui.cpp"

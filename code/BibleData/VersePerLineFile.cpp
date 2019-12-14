@@ -1,5 +1,6 @@
 #include <fstream>
 #include <sstream>
+#include "BibleData/BibleBook.h"
 #include "BibleData/VersePerLineFile.h"
 
 namespace BIBLE_DATA
@@ -29,17 +30,20 @@ namespace BIBLE_DATA
             // The format of each line is Book|Chapter#|Verse#| VerseText~
             constexpr char COMPONENT_SEPARATOR = '|';
             std::istringstream line_text(line);
-            std::getline(line_text, verse.Book, COMPONENT_SEPARATOR);
+            std::string book_name;
+            std::getline(line_text, book_name, COMPONENT_SEPARATOR);
+            BibleBookId book_id = BibleBook::GetId(book_name);
+            verse.Id.Book = book_id;
 
             // PARSE OUT THE CHAPTER NUMBER.
             std::string chapter_number;
             std::getline(line_text, chapter_number, COMPONENT_SEPARATOR);
-            verse.ChapterNumber = std::stoi(chapter_number);
+            verse.Id.ChapterNumber = std::stoi(chapter_number);
 
             // PARSE OUT THE VERSE NUMBER.
             std::string verse_number;
             std::getline(line_text, verse_number, COMPONENT_SEPARATOR);
-            verse.VerseNumber = std::stoi(verse_number);
+            verse.Id.VerseNumber = std::stoi(verse_number);
 
             // PARSE OUT THE VERSE TEXT.
             constexpr char LINE_TERMINATOR = '~';

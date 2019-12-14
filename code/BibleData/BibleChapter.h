@@ -1,7 +1,6 @@
 #pragma once
 
-#include <vector>
-#include "BibleData/BibleVerse.h"
+#include "BibleData/BibleBookId.h"
 
 namespace BIBLE_DATA
 {
@@ -9,9 +8,11 @@ namespace BIBLE_DATA
     class BibleChapter
     {
     public:
+        /// The book containing this chapter.
+        BibleBookId Book = BibleBookId::INVALID;
         /// The number of the chapter.
         unsigned int Number = 0;
-        /// The verses in the chapter.
-        std::vector<BibleVerse> Verses = {};
+        /// The number of verses in the chapter.
+        unsigned int VerseCount = 0;
     };
 }

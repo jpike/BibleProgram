@@ -1,4 +1,5 @@
 #include <ThirdParty/pugixml/pugixml.hpp>
+#include "BibleData/BibleBook.h"
 #include "BibleData/OsisXmlFile.h"
 
 namespace BIBLE_DATA
@@ -58,7 +59,8 @@ namespace BIBLE_DATA
                     verse_id_components.push_back(verse_number_component);
 
                     const std::size_t BOOK_COMPONENT_INDEX = 0;
-                    std::string book = verse_id_components.at(BOOK_COMPONENT_INDEX);
+                    std::string book_name = verse_id_components.at(BOOK_COMPONENT_INDEX);
+                    BibleBookId book_id = BibleBook::GetId(book_name);
 
                     const std::size_t CHAPTER_COMPONENT_INDEX = 1;
                     std::string chapter_number_string = verse_id_components.at(CHAPTER_COMPONENT_INDEX);
@@ -74,9 +76,7 @@ namespace BIBLE_DATA
                     // STORE THE PARSED VERSE.
                     BibleVerse verse
                     {
-                        .Book = book,
-                        .ChapterNumber = chapter_number,
-                        .VerseNumber = verse_number,
+                        .Id = BibleVerseId {.Book = book_id, .ChapterNumber = chapter_number, .VerseNumber = verse_number },
                         .Text = verse_text
                     };
                     verses.push_back(verse);

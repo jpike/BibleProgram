@@ -12,6 +12,7 @@
 #include <ThirdParty/SDL/SDL.h>
 #undef main
 #include "BibleData/Bible.h"
+#include "BibleData/BibleDataFiles.h"
 #include "BibleData/OsisXmlFile.h"
 #include "BibleData/VersePerLineFile.h"
 #include "Gui/Gui.h"
@@ -19,8 +20,8 @@
 int main()
 {
     // PARSE THE BIBLE DATA.
-    std::optional<BIBLE_DATA::VersePerLineFile> verse_per_line_file = BIBLE_DATA::VersePerLineFile::Parse("data/SacredTexts/kjvdat.txt");
-    if (verse_per_line_file)
+    std::optional<BIBLE_DATA::Bible> bible = BIBLE_DATA::BibleDataFiles::Parse();
+    if (bible)
     {
         std::cout << "Successful parse." << std::endl;
     }
@@ -29,10 +30,6 @@ int main()
         std::cerr << "Failed parse." << std::endl;
         return EXIT_FAILURE;
     }
-
-    std::optional<BIBLE_DATA::OsisXmlFile> bbe_bible_file = BIBLE_DATA::OsisXmlFile::Parse("data/GratisBible/bbe.xml");
-    std::optional<BIBLE_DATA::OsisXmlFile> web_bible_file = BIBLE_DATA::OsisXmlFile::Parse("data/GratisBible/web.xml");
-    std::optional<BIBLE_DATA::OsisXmlFile> ylt_bible_file = BIBLE_DATA::OsisXmlFile::Parse("data/GratisBible/ylt.xml");
 
     // CATCH ANY EXCEPTIONS.
     // A lot of things like SDL functions can easily fail.  To easily catch generic errors, everything's wrapped
@@ -78,8 +75,7 @@ int main()
         const char* const GLSL_VERSION = "#version 130";
         ImGui_ImplOpenGL3_Init(GLSL_VERSION);
 
-        BIBLE_DATA::Bible bible = BIBLE_DATA::Bible::Populate(verse_per_line_file->Verses);
-        GUI::Gui gui{ .Bible = bible };
+        GUI::Gui gui{ .Bible = *bible };
 
         // UPDATING.
         bool show_demo_window = true;
@@ -128,7 +124,7 @@ int main()
                 uint32_t remaining_time_in_ms_for_frame = MILLISECONDS_PER_FRAME - elapsed_time_in_ms_for_current_frame;
                 SDL_Delay(remaining_time_in_ms_for_frame);
             }
-            /// @todo std::cout << "Frame Time (ms): " << (SDL_GetTicks() - elapsed_time_in_ms_until_previous_frame) << std::endl;
+            std::cout << "Frame Time (ms): " << (SDL_GetTicks() - elapsed_time_in_ms_until_previous_frame) << std::endl;
             elapsed_time_in_ms_until_previous_frame = SDL_GetTicks();
         }
     }

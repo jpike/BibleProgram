@@ -43,10 +43,12 @@ namespace GUI
 
         static const BIBLE_DATA::BibleChapter* selected_chapter = nullptr;
         ImGui::Begin("Bible Window");
-        for (const auto& book : Bible.Books)
+        for (const auto& id_and_book : Bible.BooksById)
         {
-            if (ImGui::TreeNodeEx(book.Name.c_str(), ImGuiTreeNodeFlags_CollapsingHeader))
+            std::string book_name = BIBLE_DATA::BibleBook::FullName(id_and_book.first);
+            if (ImGui::TreeNodeEx(book_name.c_str(), ImGuiTreeNodeFlags_CollapsingHeader))
             {
+                const BIBLE_DATA::BibleBook& book = id_and_book.second;
                 for (const auto& chapter : book.Chapters)
                 {
                     std::string chapter_text = "Chapter " + std::to_string(chapter.Number);
@@ -62,9 +64,25 @@ namespace GUI
         if (selected_chapter)
         {
             ImGui::Begin("Chapter Window");
-            for (const auto& verse : selected_chapter->Verses)
+            const auto current_translation = Bible.TranslationsByName["KJV"];
+            BIBLE_DATA::BibleVerseId chapter_starting_verse_id =
             {
-                std::string verse_number_text = std::to_string(verse.VerseNumber);
+                .Book = selected_chapter->Book,
+                .ChapterNumber = selected_chapter->Number,
+                .VerseNumber = 1
+            };
+            const auto chapter_starting_verse = current_translation.VersesById.lower_bound(chapter_starting_verse_id);
+            BIBLE_DATA::BibleVerseId chapter_ending_verse_id =
+            {
+                .Book = selected_chapter->Book,
+                .ChapterNumber = selected_chapter->Number,
+                .VerseNumber = selected_chapter->VerseCount
+            };
+            const auto chapter_after_ending_verse = current_translation.VersesById.upper_bound(chapter_ending_verse_id);
+            for (auto id_and_verse = chapter_starting_verse; id_and_verse != chapter_after_ending_verse; ++id_and_verse)
+            {
+                const BIBLE_DATA::BibleVerse& verse = id_and_verse->second;
+                std::string verse_number_text = std::to_string(verse.Id.VerseNumber);
                 //ImGui::InputTextMultiline(verse_number_text.c_str(), const_cast<char *>(verse.Text.c_str()), verse.Text.length(), ImVec2(), ImGuiInputTextFlags_ReadOnly);
                 ImGui::TextWrapped(verse.Text.c_str());
             }
