@@ -12,6 +12,7 @@ namespace GUI
     {
     public:
         void UpdateAndRender();
+        void Render(const BIBLE_DATA::BibleVerse& verse);
 
         /// The Bible displayed in the GUI.
         BIBLE_DATA::Bible Bible = {};

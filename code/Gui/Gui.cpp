@@ -166,13 +166,17 @@ namespace GUI
                 const auto chapter_after_ending_verse = current_translation.VersesById.upper_bound(chapter_ending_verse_id);
                 for (auto id_and_verse = chapter_starting_verse; id_and_verse != chapter_after_ending_verse; ++id_and_verse)
                 {
+                    /// @todo   Render same verse across all translations on same horizontal line?
                     const BIBLE_DATA::BibleVerse& verse = id_and_verse->second;
+                    Render(verse);
+                    /*
                     std::string verse_number_text = std::to_string(verse.Id.VerseNumber);
                     //ImGui::InputTextMultiline(verse_number_text.c_str(), const_cast<char *>(verse.Text.c_str()), verse.Text.length(), ImVec2(), ImGuiInputTextFlags_ReadOnly);
 
                     std::string verse_number_and_content_text = verse_number_text + ": " + verse.Text;
 
                     ImGui::TextWrapped(verse_number_and_content_text.c_str());
+                    */
                 }
 
                 /*std::string chapter_text;
@@ -206,5 +210,16 @@ namespace GUI
 
             ImGui::End();
         }
+    }
+
+    void Gui::Render(const BIBLE_DATA::BibleVerse& verse)
+    {
+        std::string verse_number = std::to_string(verse.Id.VerseNumber);
+        // This font scaling stuff technically works, but doesn't look that great, so it's commented out for now.
+        //ImGui::SetWindowFontScale(0.8f);
+        ImGui::TextDisabled(verse_number.c_str());
+        ImGui::SameLine();
+        //ImGui::SetWindowFontScale(1.0f);
+        ImGui::TextWrapped(verse.Text.c_str());
     }
 }
