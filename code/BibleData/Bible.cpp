@@ -6,7 +6,7 @@ namespace BIBLE_DATA
     /// Adds data from the specified translation to the Bible.
     /// @param[in]  translation_name - The name of the translation.
     /// @param[in]  verses - The verses for the translation.
-    void Bible::AddTranslation(const std::string& translation_name, const std::vector<BibleVerse>& verses)
+    void Bible::AddTranslation(const std::string& translation_name, const std::vector<BibleVerse>& verses, const std::map<BibleBookId, BibleBook>& books)
     {
         // MAKE SURE THE STRUCTURAL INFORMATION ABOUT THE TRANSLATION IS IN THE BIBLE.
         for (const auto& verse : verses)
@@ -38,7 +38,8 @@ namespace BIBLE_DATA
         }
 
         // ADD THE TRANSLATION ITSELF.
-        BibleTranslation translation = BibleTranslation::Populate(verses);
+        BooksById = books;
+        BibleTranslation translation = BibleTranslation::Populate(verses, books);
         TranslationsByName[translation_name] = translation;
     }
 }

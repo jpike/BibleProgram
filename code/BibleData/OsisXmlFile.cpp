@@ -18,6 +18,7 @@ namespace BIBLE_DATA
         }
 
         // PARSE VERSES FROM EACH BOOK IN THE FILE.
+        OsisXmlFile parsed_bible;
         std::vector<BibleVerse> verses;
         pugi::xml_node osis_text_xml_node = osis_xml_document.select_node("/osis/osisText").node();
         // An assumption is being made that all direct child divs are for books, which is consistent with all files thus far.
@@ -73,18 +74,26 @@ namespace BIBLE_DATA
                     // GET THE VERSE TEXT.
                     std::string verse_text = verse_xml_node.text().as_string();
 
+                    // The tokenized form is needed as well.
+                    /// \todo std::vector<Token> verse_tokens = BibleVerse::Tokenize(verse_text);
+
                     // STORE THE PARSED VERSE.
                     BibleVerse verse
                     {
                         .Id = BibleVerseId {.Book = book_id, .ChapterNumber = chapter_number, .VerseNumber = verse_number },
-                        .Text = verse_text
+                        .Text = verse_text,
+                        /// \todo .Tokens = verse_tokens
                     };
-                    verses.push_back(verse);
+                    parsed_bible.Verses.push_back(verse);
+
+                    // PLACE THE VERSE IN ITS BOOK.
+                    parsed_bible.BooksById[book_id].Id = book_id;
+                    parsed_bible.BooksById[book_id].AddVerse(verse);
                 }
             }
         }
 
         // RETURN THE PARSED FILE.
-        return OsisXmlFile{ .Verses = verses };
+        return parsed_bible;
     }
 }

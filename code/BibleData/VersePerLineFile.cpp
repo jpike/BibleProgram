@@ -19,6 +19,7 @@ namespace BIBLE_DATA
         }
 
         // PARSE EACH LINE FROM THE FILE.
+        VersePerLineFile parsed_bible;
         std::vector<BibleVerse> verses;
 
         std::string line;
@@ -54,11 +55,18 @@ namespace BIBLE_DATA
             constexpr std::size_t SPACE_CHARACTER_COUNT = 1;
             verse.Text.erase(START_INDEX, SPACE_CHARACTER_COUNT);
 
+            // TOKENIZE THE VERSE.
+            /// \todo verse.Tokens = BibleVerse::Tokenize(verse.Text);
+
             // STORE THE PARSED VERSE.
-            verses.push_back(verse);
+            parsed_bible.Verses.push_back(verse);
+
+            // PLACE THE VERSE IN ITS BOOK.
+            parsed_bible.BooksById[book_id].Id = book_id;
+            parsed_bible.BooksById[book_id].AddVerse(verse);
         }
 
         // RETURN THE PARSED FILE.
-        return VersePerLineFile{ .Verses = verses };
+        return parsed_bible;
     }
 }

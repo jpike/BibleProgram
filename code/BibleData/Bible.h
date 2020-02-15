@@ -13,7 +13,7 @@ namespace BIBLE_DATA
     class Bible
     {
     public:
-        void AddTranslation(const std::string& translation_name, const std::vector<BibleVerse>& verses);
+        void AddTranslation(const std::string& translation_name, const std::vector<BibleVerse>& verses, const std::map<BibleBookId, BibleBook>& books_by_id);
 
         /// The books in the Bible, mapped by their IDs.
         /// This member variable defines the overall organizational structure, rather than content, of the Bible.

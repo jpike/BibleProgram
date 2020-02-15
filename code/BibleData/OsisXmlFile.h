@@ -2,7 +2,10 @@
 
 #include <optional>
 #include <filesystem>
+#include <map>
 #include <vector>
+#include "BibleData/BibleBookId.h"
+#include "BibleData/BibleBook.h"
 #include "BibleData/BibleVerse.h"
 
 namespace BIBLE_DATA
@@ -17,5 +20,7 @@ namespace BIBLE_DATA
         /// PUBLIC MEMBER VARIABLES FOR EASY ACCESS.
         /// The verses parsed from the file.
         std::vector<BibleVerse> Verses = {};
+
+        std::map<BibleBookId, BibleBook> BooksById = {};
     };
 }

@@ -520,4 +520,11 @@ namespace BIBLE_DATA
                 return "INVALID";
         }
     }
+
+    void BibleBook::AddVerse(const BibleVerse& verse)
+    {
+        ChaptersByNumber[verse.Id.ChapterNumber].Book = verse.Id.Book;
+        ChaptersByNumber[verse.Id.ChapterNumber].Number = verse.Id.ChapterNumber;
+        ChaptersByNumber[verse.Id.ChapterNumber].AddVerse(verse);
+    }
 }

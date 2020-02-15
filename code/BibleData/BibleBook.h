@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <map>
 #include <vector>
 #include "BibleData/BibleBookId.h"
 #include "BibleData/BibleChapter.h"
@@ -15,9 +16,12 @@ namespace BIBLE_DATA
         static BibleBookId GetId(const std::string& book_name_or_abbreviation);
         static std::string FullName(const BibleBookId book_id);
 
+        void AddVerse(const BibleVerse& verse);
+
         /// The ID of the book.
         BibleBookId Id = BibleBookId::INVALID;
-        /// The chapters in the book.
         std::vector<BibleChapter> Chapters = {};
+        /// The chapters in the book by numeric ID (starting at 1).
+        std::map<unsigned int, BibleChapter> ChaptersByNumber = {};
     };
 }
