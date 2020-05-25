@@ -208,10 +208,7 @@ namespace GUI
             }
 
             ImGui::ItemSize(text_size);
-            if (!ImGui::ItemAdd(text_bounding_box, 0))
-            {
-                return;
-            }
+            ImGui::ItemAdd(text_bounding_box, 0);
 
             // SET THE TEXT COLOR.
             // A temporarily different (usually) highlight color is used when hovering over.
@@ -227,7 +224,6 @@ namespace GUI
             // RenderTextWrapped didn't work, so we're rendering text directly.
             ImGui::RenderText(text_bounding_box.Min, text_begin, text_end);
             ImGui::PopStyleColor();
-
             // ADJUST THE COLOR FOR TESTING.
             // This is just temporary and will be replaced with fixed lookups/customizable options later.
             if (color.x <= color.y)
