@@ -75,11 +75,15 @@ int main()
         const char* const GLSL_VERSION = "#version 130";
         ImGui_ImplOpenGL3_Init(GLSL_VERSION);
 
+#if 0
         GUI::Gui gui
         { 
             .TranslationConfig = GUI::BibleTranslationConfig::Create(*bible),
             .Bible = *bible 
         };
+#else
+        GUI::Gui gui;
+#endif
 
         // UPDATING.
         bool show_demo_window = true;
@@ -105,7 +109,7 @@ int main()
             ImGui::NewFrame();
             ImGui::ShowDemoWindow(&show_demo_window);
 
-            gui.UpdateAndRender();
+            gui.UpdateAndRender(*bible);
 
             ImGui::Render();
             ImGuiIO& io = ImGui::GetIO();

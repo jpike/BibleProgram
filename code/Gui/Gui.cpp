@@ -7,6 +7,56 @@
 namespace GUI
 {
     /// Updates and renders a single frame of the GUI.
+    /// @param[in]  bible - The Bible to display in the window.
+    void Gui::UpdateAndRender(const BIBLE_DATA::Bible& bible)
+    {
+        // RENDER THE MAIN MENU BAR.
+        if (ImGui::BeginMainMenuBar())
+        {
+            // No shortcut keys are displayed for menu items since ImGui doesn't currently handle them.
+            constexpr char* NO_SHORTCUT_KEYS = nullptr;
+
+            // RENDER THE MENU FOR THE ACCESSING AVAILABLE WINDOWS.
+            if (ImGui::BeginMenu("Windows"))
+            {
+                ImGui::MenuItem("Bible Books", NO_SHORTCUT_KEYS, &BibleBookWindow.Open);
+
+                ImGui::EndMenu();
+            }
+
+            // RENDER THE DEBUG MENU.
+            if (ImGui::BeginMenu("Debug"))
+            {
+                ImGui::MenuItem("Metrics", NO_SHORTCUT_KEYS, &MetricsWindow.Open);
+                ImGui::MenuItem("Style Editor", NO_SHORTCUT_KEYS, &StyleEditorWindow.Open);
+                ImGui::MenuItem("About", NO_SHORTCUT_KEYS, &AboutWindow.Open);
+
+                ImGui::EndMenu();
+            }
+
+            // RENDER A SEARCH BAR.
+            /// @todo   Seems to return true either if enter pressed or value changed?
+            static char search_text[64];
+            ImGui::SetNextItemWidth(256.0f);
+            ImGui::InputTextWithHint("Search", "Enter book/chapter/verse range", search_text, IM_ARRAYSIZE(search_text));
+        }
+        ImGui::EndMainMenuBar();
+
+        // UPDATE AND RENDER ALL WINDOWS.
+        const BIBLE_DATA::BibleChapter* selected_chapter = BibleBookWindow.UpdateAndRender(bible);
+        if (selected_chapter)
+        {
+            /// @todo   Get verses and render!
+            BibleVersesWindow.Open = true;
+        }
+
+        MetricsWindow.UpdateAndRender();
+        StyleEditorWindow.UpdateAndRender();
+        AboutWindow.UpdateAndRender();
+    }
+
+#if 0
+    /// Updates and renders a single frame of the GUI.
     void Gui::UpdateAndRender()
     {
         DEBUGGING::Timer function_timer("UpdateAndRender()");
@@ -240,4 +290,5 @@ namespace GUI
             }
         }
     }
+#endif
 }

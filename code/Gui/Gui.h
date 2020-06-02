@@ -3,10 +3,36 @@
 #include <unordered_map>
 #include <vector>
 #include "BibleData/Bible.h"
+#include "Gui/BibleBookWindow.h"
+#include "Gui/BibleVersesWindow.h"
+#include "Gui/Debugging/AboutWindow.h"
+#include "Gui/Debugging/GuiMetricsWindow.h"
+#include "Gui/Debugging/StyleEditorWindow.h"
 
 /// Holds code for the main graphical user interface (GUI) of the program.
 namespace GUI
 {
+    /// The root main graphical user interface of the program.
+    /// This class acts as the centralized point for the main loop to call into.
+    class Gui
+    {
+    public:
+        void UpdateAndRender(const BIBLE_DATA::Bible& bible);
+
+        /// A window for displaying and selecting Bible books.
+        BibleBookWindow BibleBookWindow = {};
+        /// A window for displaying Bible verses.
+        BibleVersesWindow BibleVersesWindow = {};
+
+        /// A window displaying basic GUI metrics.
+        DEBUGGING::GuiMetricsWindow MetricsWindow = {};
+        /// A window allowing editing of GUI styles.
+        DEBUGGING::StyleEditorWindow StyleEditorWindow = {};
+        /// A basic "about" window for the GUI.
+        DEBUGGING::AboutWindow AboutWindow = {};
+    };
+
+#if 0
     class DebugGui
     {
     public:
@@ -94,4 +120,5 @@ namespace GUI
             std::string,
             std::vector<BIBLE_DATA::BibleVerse>> CurrentVersesByTranslationName = {};
     };
+#endif
 }

@@ -16,6 +16,11 @@
 #include "BibleData/BibleVerse.cpp"
 #include "BibleData/OsisXmlFile.cpp"
 #include "BibleData/VersePerLineFile.cpp"
+#include "Gui/BibleBookWindow.cpp"
+#include "Gui/BibleVersesWindow.cpp"
+#include "Gui/Debugging/AboutWindow.cpp"
+#include "Gui/Debugging/GuiMetricsWindow.cpp"
+#include "Gui/Debugging/StyleEditorWindow.cpp"
 #include "Gui/Gui.cpp"
 
 #if __EMSCRIPTEN__
