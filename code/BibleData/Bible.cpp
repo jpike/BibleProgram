@@ -42,4 +42,25 @@ namespace BIBLE_DATA
         BibleTranslation translation = BibleTranslation::Populate(verses, books);
         TranslationsByName[translation_name] = translation;
     }
+
+    /// Gets the specified verses.
+    /// @param[in]  starting_verse_id - The ID of the first verse in the range to get.
+    /// @param[in]  ending_verse_id - The ID of the last verse in the range to get.
+    /// @return The specified verses.
+    std::vector<BibleVerse> Bible::GetVerses(const BibleVerseId& starting_verse_id, const BibleVerseId& ending_verse_id) const
+    {
+        std::vector<BibleVerse> verses;
+
+        auto current_translation = TranslationsByName.at("KJV");
+       
+        auto starting_verse = current_translation.VersesById.lower_bound(starting_verse_id);
+        auto after_ending_verse = current_translation.VersesById.upper_bound(ending_verse_id);
+
+        for (auto& id_and_verse = starting_verse; id_and_verse != after_ending_verse; ++id_and_verse)
+        {
+            verses.push_back(id_and_verse->second);
+        }
+
+        return verses;
+    }
 }

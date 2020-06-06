@@ -14,6 +14,7 @@
 #include "BibleData/BibleDataFiles.cpp"
 #include "BibleData/BibleTranslation.cpp"
 #include "BibleData/BibleVerse.cpp"
+#include "BibleData/BibleVerseId.cpp"
 #include "BibleData/OsisXmlFile.cpp"
 #include "BibleData/VersePerLineFile.cpp"
 #include "Gui/BibleBookWindow.cpp"

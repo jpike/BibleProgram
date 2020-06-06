@@ -13,7 +13,7 @@ namespace BIBLE_DATA
     {
     public:
         static std::vector<Token> Tokenize(const std::string& verse_text);
-        const std::vector<Token>* GetTokens()
+        const std::vector<Token>* GetTokens() const
         {
             if (Tokens.empty())
             {
@@ -29,6 +29,6 @@ namespace BIBLE_DATA
 
         /// \todo
         /// The verse text broken down into tokens.
-        std::vector<Token> Tokens = {};
+        mutable std::vector<Token> Tokens = {};
     };
 }

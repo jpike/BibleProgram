@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <optional>
+#include <utility>
 #include "BibleData/BibleBookId.h"
 
 namespace BIBLE_DATA
@@ -9,6 +11,8 @@ namespace BIBLE_DATA
     class BibleVerseId
     {
     public:
+        static std::optional<std::pair<BibleVerseId, BibleVerseId>> ParseRange(const std::string& verse_range_text);
+
         bool operator<(const BibleVerseId& rhs) const
         {
             if (Book < rhs.Book) return true;

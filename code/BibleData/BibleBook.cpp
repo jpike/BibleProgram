@@ -12,39 +12,49 @@ namespace BIBLE_DATA
     {
         // This code only looks for strings that have been needed to be recognized so far.
         // It may need to be updated if new data sources are supported.
-        if ("Gen" == book_name_or_abbreviation)
+        if (
+            "Gen" == book_name_or_abbreviation ||
+            "Genesis" == book_name_or_abbreviation)
         {
             return BibleBookId::GENESIS;
         }
         else if (
             "Exo" == book_name_or_abbreviation ||
-            "Exod" == book_name_or_abbreviation)
+            "Exod" == book_name_or_abbreviation ||
+            "Exodus" == book_name_or_abbreviation)
         {
             return BibleBookId::EXODUS;
         }
-        else if ("Lev" == book_name_or_abbreviation)
+        else if (
+            "Lev" == book_name_or_abbreviation ||
+            "Leviticus" == book_name_or_abbreviation)
         {
             return BibleBookId::LEVITICUS;
         }
-        else if ("Num" == book_name_or_abbreviation)
+        else if (
+            "Num" == book_name_or_abbreviation ||
+            "Numbers" == book_name_or_abbreviation)
         {
             return BibleBookId::NUMBERS;
         }
         else if (
             "Deu" == book_name_or_abbreviation ||
-            "Deut" == book_name_or_abbreviation)
+            "Deut" == book_name_or_abbreviation ||
+            "Deuteronomy" == book_name_or_abbreviation)
         {
             return BibleBookId::DEUTERONOMY;
         }
         else if (
             "Jos" == book_name_or_abbreviation ||
-            "Josh" == book_name_or_abbreviation)
+            "Josh" == book_name_or_abbreviation ||
+            "Joshua" == book_name_or_abbreviation)
         {
             return BibleBookId::JOSHUA;
         }
         else if (
             "Jdg" == book_name_or_abbreviation ||
-            "Judg" == book_name_or_abbreviation)
+            "Judg" == book_name_or_abbreviation ||
+            "Judges" == book_name_or_abbreviation)
         {
             return BibleBookId::JUDGES;
         }
@@ -56,37 +66,43 @@ namespace BIBLE_DATA
         }
         else if (
             "Sa1" == book_name_or_abbreviation ||
-            "1Sam" == book_name_or_abbreviation)
+            "1Sam" == book_name_or_abbreviation ||
+            "1 Samuel" == book_name_or_abbreviation)
         {
             return BibleBookId::FIRST_SAMUEL;
         }
         else if (
             "Sa2" == book_name_or_abbreviation ||
-            "2Sam" == book_name_or_abbreviation)
+            "2Sam" == book_name_or_abbreviation ||
+            "2 Samuel" == book_name_or_abbreviation)
         {
             return BibleBookId::SECOND_SAMUEL;
         }
         else if (
             "Kg1" == book_name_or_abbreviation ||
-            "1Kgs" == book_name_or_abbreviation)
+            "1Kgs" == book_name_or_abbreviation ||
+            "1 Kings" == book_name_or_abbreviation)
         {
             return BibleBookId::FIRST_KINGS;
         }
         else if (
             "Kg2" == book_name_or_abbreviation ||
-            "2Kgs" == book_name_or_abbreviation)
+            "2Kgs" == book_name_or_abbreviation ||
+            "2 Kings" == book_name_or_abbreviation)
         {
             return BibleBookId::SECOND_KINGS;
         }
         else if (
             "Ch1" == book_name_or_abbreviation ||
-            "1Chr" == book_name_or_abbreviation)
+            "1Chr" == book_name_or_abbreviation ||
+            "1 Chronicles" == book_name_or_abbreviation)
         {
             return BibleBookId::FIRST_CHRONICLES;
         }
         else if (
             "Ch2" == book_name_or_abbreviation ||
-            "2Chr" == book_name_or_abbreviation)
+            "2Chr" == book_name_or_abbreviation ||
+            "2 Chronicles" == book_name_or_abbreviation)
         {
             return BibleBookId::SECOND_CHRONICLES;
         }
@@ -96,13 +112,16 @@ namespace BIBLE_DATA
         {
             return BibleBookId::EZRA;
         }
-        else if ("Neh" == book_name_or_abbreviation)
+        else if (
+            "Neh" == book_name_or_abbreviation ||
+            "Nehemiah" == book_name_or_abbreviation)
         {
             return BibleBookId::NEHEMIAH;
         }
         else if (
             "Est" == book_name_or_abbreviation ||
-            "Esth" == book_name_or_abbreviation)
+            "Esth" == book_name_or_abbreviation ||
+            "Esther" == book_name_or_abbreviation)
         {
             return BibleBookId::ESTHER;
         }
@@ -112,51 +131,68 @@ namespace BIBLE_DATA
         }
         else if (
             "Psa" == book_name_or_abbreviation ||
-            "Ps" == book_name_or_abbreviation)
+            "Ps" == book_name_or_abbreviation ||
+            "Psalm" == book_name_or_abbreviation ||
+            "Psalms" == book_name_or_abbreviation)
         {
             return BibleBookId::PSALMS;
         }
         else if (
             "Pro" == book_name_or_abbreviation ||
-            "Prov" == book_name_or_abbreviation)
+            "Prov" == book_name_or_abbreviation ||
+            "Proverbs" == book_name_or_abbreviation)
         {
             return BibleBookId::PROVERBS;
         }
         else if (
             "Ecc" == book_name_or_abbreviation ||
-            "Eccl" == book_name_or_abbreviation)
+            "Eccl" == book_name_or_abbreviation ||
+            "Ecclesiates" == book_name_or_abbreviation)
         {
             return BibleBookId::ECCLESIASTES;
         }
         else if (
             "Sol" == book_name_or_abbreviation ||
-            "Song" == book_name_or_abbreviation)
+            "Song" == book_name_or_abbreviation ||
+            "Song of Songs" == book_name_or_abbreviation ||
+            "Song of Solomon" == book_name_or_abbreviation)
         {
             return BibleBookId::SONG_OF_SOLOMON;
         }
-        else if ("Isa" == book_name_or_abbreviation)
+        else if (
+            "Isa" == book_name_or_abbreviation ||
+            "Isaiah" == book_name_or_abbreviation)
         {
             return BibleBookId::ISAIAH;
         }
-        else if ("Jer" == book_name_or_abbreviation)
+        else if (
+            "Jer" == book_name_or_abbreviation ||
+            "Jeremiah" == book_name_or_abbreviation)
         {
             return BibleBookId::JEREMIAH;
         }
-        else if ("Lam" == book_name_or_abbreviation)
+        else if (
+            "Lam" == book_name_or_abbreviation ||
+            "Lamentations" == book_name_or_abbreviation)
         {
             return BibleBookId::LAMENTATIONS;
         }
         else if (
             "Eze" == book_name_or_abbreviation ||
-            "Ezek" == book_name_or_abbreviation)
+            "Ezek" == book_name_or_abbreviation ||
+            "Ezekiel" == book_name_or_abbreviation)
         {
             return BibleBookId::EZEKIEL;
         }
-        else if ("Dan" == book_name_or_abbreviation)
+        else if (
+            "Dan" == book_name_or_abbreviation ||
+            "Daniel" == book_name_or_abbreviation)
         {
             return BibleBookId::DANIEL;
         }
-        else if ("Hos" == book_name_or_abbreviation)
+        else if (
+            "Hos" == book_name_or_abbreviation ||
+            "Hosea" == book_name_or_abbreviation)
         {
             return BibleBookId::HOSEA;
         }
@@ -174,7 +210,8 @@ namespace BIBLE_DATA
         }
         else if (
             "Oba" == book_name_or_abbreviation ||
-            "Obad" == book_name_or_abbreviation)
+            "Obad" == book_name_or_abbreviation ||
+            "Obadiah" == book_name_or_abbreviation)
         {
             return BibleBookId::OBADIAH;
         }
@@ -184,41 +221,54 @@ namespace BIBLE_DATA
         {
             return BibleBookId::JONAH;
         }
-        else if ("Mic" == book_name_or_abbreviation)
+        else if (
+            "Mic" == book_name_or_abbreviation ||
+            "Micah" == book_name_or_abbreviation)
         {
             return BibleBookId::MICAH;
         }
-        else if ("Nah" == book_name_or_abbreviation)
+        else if (
+            "Nah" == book_name_or_abbreviation ||
+            "Nahum" == book_name_or_abbreviation)
         {
             return BibleBookId::NAHUM;
         }
-        else if ("Hab" == book_name_or_abbreviation)
+        else if (
+            "Hab" == book_name_or_abbreviation ||
+            "Habakkuk" == book_name_or_abbreviation)
         {
             return BibleBookId::HABAKKUK;
         }
         else if (
             "Zep" == book_name_or_abbreviation ||
-            "Zeph" == book_name_or_abbreviation)
+            "Zeph" == book_name_or_abbreviation ||
+            "Zephaniah" == book_name_or_abbreviation)
         {
             return BibleBookId::ZEPHANIAH;
         }
-        else if ("Hag" == book_name_or_abbreviation)
+        else if (
+            "Hag" == book_name_or_abbreviation ||
+            "Haggai" == book_name_or_abbreviation)
         {
             return BibleBookId::HAGGAI;
         }
         else if (
             "Zac" == book_name_or_abbreviation ||
-            "Zech" == book_name_or_abbreviation)
+            "Zech" == book_name_or_abbreviation ||
+            "Zechariah" == book_name_or_abbreviation)
         {
             return BibleBookId::ZECHARIAH;
         }
-        else if ("Mal" == book_name_or_abbreviation)
+        else if (
+            "Mal" == book_name_or_abbreviation ||
+            "Malachi" == book_name_or_abbreviation)
         {
             return BibleBookId::MALACHI;
         }
         else if (
             "Mat" == book_name_or_abbreviation ||
-            "Matt" == book_name_or_abbreviation)
+            "Matt" == book_name_or_abbreviation ||
+            "Matthew" == book_name_or_abbreviation)
         {
             return BibleBookId::MATTHEW;
         }
@@ -246,61 +296,76 @@ namespace BIBLE_DATA
         {
             return BibleBookId::ACTS;
         }
-        else if ("Rom" == book_name_or_abbreviation)
+        else if (
+            "Rom" == book_name_or_abbreviation ||
+            "Romans" == book_name_or_abbreviation)
         {
             return BibleBookId::ROMANS;
         }
         else if (
             "Co1" == book_name_or_abbreviation ||
-            "1Cor" == book_name_or_abbreviation)
+            "1Cor" == book_name_or_abbreviation ||
+            "1 Corinthians" == book_name_or_abbreviation)
         {
             return BibleBookId::FIRST_CORINTHIANS;
         }
         else if (
             "Co2" == book_name_or_abbreviation ||
-            "2Cor" == book_name_or_abbreviation)
+            "2Cor" == book_name_or_abbreviation ||
+            "2 Corinthians" == book_name_or_abbreviation)
         {
             return BibleBookId::SECOND_CORINTHIANS;
         }
-        else if ("Gal" == book_name_or_abbreviation)
+        else if (
+            "Gal" == book_name_or_abbreviation ||
+            "Galatians" == book_name_or_abbreviation)
         {
             return BibleBookId::GALATIANS;
         }
-        else if ("Eph" == book_name_or_abbreviation)
+        else if (
+            "Eph" == book_name_or_abbreviation ||
+            "Ephesians" == book_name_or_abbreviation)
         {
             return BibleBookId::EPHESIANS;
         }
         else if (
             "Phi" == book_name_or_abbreviation ||
-            "Phil" == book_name_or_abbreviation)
+            "Phil" == book_name_or_abbreviation ||
+            "Philippians" == book_name_or_abbreviation)
         {
             return BibleBookId::PHILIPPIANS;
         }
-        else if ("Col" == book_name_or_abbreviation)
+        else if (
+            "Col" == book_name_or_abbreviation ||
+            "Colossians" == book_name_or_abbreviation)
         {
             return BibleBookId::COLOSSIANS;
         }
         else if (
             "Th1" == book_name_or_abbreviation ||
-            "1Thess" == book_name_or_abbreviation)
+            "1Thess" == book_name_or_abbreviation ||
+            "1 Thessalonians" == book_name_or_abbreviation)
         {
             return BibleBookId::FIRST_THESSALONIANS;
         }
         else if (
             "Th2" == book_name_or_abbreviation ||
-            "2Thess" == book_name_or_abbreviation)
+            "2Thess" == book_name_or_abbreviation ||
+            "2 Thessalonians" == book_name_or_abbreviation)
         {
             return BibleBookId::SECOND_THESSALONIANS;
         }
         else if (
             "Ti1" == book_name_or_abbreviation ||
-            "1Tim" == book_name_or_abbreviation)
+            "1Tim" == book_name_or_abbreviation ||
+            "1 Timothy" == book_name_or_abbreviation)
         {
             return BibleBookId::FIRST_TIMOTHY;
         }
         else if (
             "Ti2" == book_name_or_abbreviation ||
-            "2Tim" == book_name_or_abbreviation)
+            "2Tim" == book_name_or_abbreviation ||
+            "2 Timothy" == book_name_or_abbreviation)
         {
             return BibleBookId::SECOND_TIMOTHY;
         }
@@ -312,47 +377,56 @@ namespace BIBLE_DATA
         }
         else if (
             "Plm" == book_name_or_abbreviation ||
-            "Phlm" == book_name_or_abbreviation)
+            "Phlm" == book_name_or_abbreviation ||
+            "Philemon" == book_name_or_abbreviation)
         {
             return BibleBookId::PHILEMON;
         }
-        else if ("Heb" == book_name_or_abbreviation)
+        else if (
+            "Heb" == book_name_or_abbreviation ||
+            "Hebrews" == book_name_or_abbreviation)
         {
             return BibleBookId::HEBREWS;
         }
         else if (
             "Jam" == book_name_or_abbreviation ||
-            "Jas" == book_name_or_abbreviation)
+            "Jas" == book_name_or_abbreviation ||
+            "James" == book_name_or_abbreviation)
         {
             return BibleBookId::JAMES;
         }
         else if (
             "Pe1" == book_name_or_abbreviation ||
-            "1Pet" == book_name_or_abbreviation)
+            "1Pet" == book_name_or_abbreviation ||
+            "1 Peter" == book_name_or_abbreviation)
         {
             return BibleBookId::FIRST_PETER;
         }
         else if (
             "Pe2" == book_name_or_abbreviation ||
-            "2Pet" == book_name_or_abbreviation)
+            "2Pet" == book_name_or_abbreviation ||
+            "2 Peter" == book_name_or_abbreviation)
         {
             return BibleBookId::SECOND_PETER;
         }
         else if (
             "Jo1" == book_name_or_abbreviation ||
-            "1John" == book_name_or_abbreviation)
+            "1John" == book_name_or_abbreviation ||
+            "1 John" == book_name_or_abbreviation)
         {
             return BibleBookId::FIRST_JOHN;
         }
         else if (
             "Jo2" == book_name_or_abbreviation ||
-            "2John" == book_name_or_abbreviation)
+            "2John" == book_name_or_abbreviation ||
+            "2 John" == book_name_or_abbreviation)
         {
             return BibleBookId::SECOND_JOHN;
         }
         else if (
             "Jo3" == book_name_or_abbreviation ||
-            "3John" == book_name_or_abbreviation)
+            "3John" == book_name_or_abbreviation ||
+            "3 John" == book_name_or_abbreviation)
         {
             return BibleBookId::THIRD_JOHN;
         }
@@ -362,7 +436,9 @@ namespace BIBLE_DATA
         {
             return BibleBookId::JUDE;
         }
-        else if ("Rev" == book_name_or_abbreviation)
+        else if (
+            "Rev" == book_name_or_abbreviation ||
+            "Revelation" == book_name_or_abbreviation)
         {
             return BibleBookId::REVELATION;
         }

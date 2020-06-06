@@ -38,7 +38,25 @@ namespace GUI
             /// @todo   Seems to return true either if enter pressed or value changed?
             static char search_text[64];
             ImGui::SetNextItemWidth(256.0f);
-            ImGui::InputTextWithHint("Search", "Enter book/chapter/verse range", search_text, IM_ARRAYSIZE(search_text));
+            bool enter_pressed = ImGui::InputTextWithHint(
+                "###VerseReferenceSearch", 
+                "Enter book/chapter/verse range", 
+                search_text, 
+                IM_ARRAYSIZE(search_text),
+                ImGuiInputTextFlags_EnterReturnsTrue);
+            if (enter_pressed)
+            {
+                std::optional<std::pair<BIBLE_DATA::BibleVerseId, BIBLE_DATA::BibleVerseId>> verse_range = BIBLE_DATA::BibleVerseId::ParseRange(search_text);
+                if (verse_range)
+                {
+                    BibleVersesWindow.StartingVerseId = verse_range->first;
+                    BibleVersesWindow.EndingVerseId = verse_range->second;
+                    BibleVersesWindow.Verses = bible.GetVerses(verse_range->first, verse_range->second);
+
+                    /// @todo   Get verses and render!
+                    BibleVersesWindow.Open = true;
+                }
+            }
         }
         ImGui::EndMainMenuBar();
 
@@ -46,9 +64,29 @@ namespace GUI
         const BIBLE_DATA::BibleChapter* selected_chapter = BibleBookWindow.UpdateAndRender(bible);
         if (selected_chapter)
         {
+            BIBLE_DATA::BibleVerseId chapter_starting_verse_id =
+            {
+                .Book = selected_chapter->Book,
+                .ChapterNumber = selected_chapter->Number,
+                .VerseNumber = 1
+            };
+            auto chapter_starting_verse = bible.TranslationsByName.at("KJV").VersesById.lower_bound(chapter_starting_verse_id);
+            BIBLE_DATA::BibleVerseId chapter_ending_verse_id =
+            {
+                .Book = selected_chapter->Book,
+                .ChapterNumber = selected_chapter->Number,
+                .VerseNumber = static_cast<unsigned int>(selected_chapter->VersesByNumber.size())
+            };
+
+            BibleVersesWindow.StartingVerseId = chapter_starting_verse_id;
+            BibleVersesWindow.EndingVerseId = chapter_ending_verse_id;
+            BibleVersesWindow.Verses = bible.GetVerses(chapter_starting_verse_id, chapter_ending_verse_id);
+
             /// @todo   Get verses and render!
             BibleVersesWindow.Open = true;
         }
+
+        BibleVersesWindow.UpdateAndRender();
 
         MetricsWindow.UpdateAndRender();
         StyleEditorWindow.UpdateAndRender();

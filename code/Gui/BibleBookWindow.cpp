@@ -32,7 +32,9 @@ namespace GUI
                     {
                         // RENDER A SELECTABLE FOR THE CHAPTER.
                         std::string chapter_text = "Chapter " + std::to_string(number_and_chapter.first);
-                        if (ImGui::Selectable(chapter_text.c_str()))
+                        std::string chapter_id = "##" + book_name + chapter_text;
+                        std::string chapter_text_and_id = chapter_text + chapter_id;
+                        if (ImGui::Selectable(chapter_text_and_id.c_str()))
                         {
                             // TRACK THE SELECTED CHAPTER.
                             selected_chapter = &number_and_chapter.second;
