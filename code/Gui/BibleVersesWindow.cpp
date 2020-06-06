@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cctype>
-#include <ThirdParty/imgui/imgui.h>
+#include <random>
+#include <unordered_set>
 #include <ThirdParty/imgui/imgui_internal.h>
 #include "BibleData/BibleBook.h"
 #include "Gui/BibleVersesWindow.h"
@@ -34,8 +35,34 @@ namespace GUI
         ImVec2 min_window_size_in_pixels = { 400.0f, 400.0f };
         ImGui::SetNextWindowSize(min_window_size_in_pixels, ImGuiCond_FirstUseEver);
 
-        if (ImGui::Begin(window_title_and_id.c_str(), &Open))
+        static std::vector<std::pair<unsigned int, std::string>> counts_with_words;
+
+        if (ImGui::Begin(window_title_and_id.c_str(), &Open, ImGuiWindowFlags_MenuBar))
         {
+            // RENDER A MENU BAR.
+            if (ImGui::BeginMenuBar())
+            {
+                if (ImGui::Button("Statistics"))
+                {
+                    ComputeWordStatistics();
+                    counts_with_words.clear();
+                    for (const auto& word_with_count : OccurrenceCountsByWord)
+                    {
+                        counts_with_words.emplace_back(word_with_count.second, word_with_count.first);
+                    }
+                    std::sort(counts_with_words.begin(), counts_with_words.end());
+                    std::reverse(counts_with_words.begin(), counts_with_words.end());
+                }
+
+                if (ImGui::Button("Colorize"))
+                {
+                    UpdateColorLookup();
+                }
+
+                ImGui::EndMenuBar();
+            }
+
+            // RENDER THE VERSES.
             BIBLE_DATA::BibleBookId previous_book = BIBLE_DATA::BibleBookId::INVALID;
             unsigned int previous_chapter_number = 0;
             for (const auto& verse : Verses)
@@ -72,6 +99,23 @@ namespace GUI
 
                 Render(verse);
             }
+
+            bool any_verse_hovered = ImGui::IsAnyItemHovered();
+            if (!any_verse_hovered)
+            {
+                CurrentlyHighlightedWord.clear();
+            }
+        }
+        ImGui::End();
+
+        /// @todo   Make this a separate window!
+        if (ImGui::Begin("Word Counts"))
+        {
+            for (const auto& count_with_word : counts_with_words)
+            {
+                std::string word_statistics = count_with_word.second + ": " + std::to_string(count_with_word.first);
+                ImGui::Text(word_statistics.c_str());
+            }
         }
         ImGui::End();
     }
@@ -99,6 +143,19 @@ namespace GUI
             if (token.Type == BIBLE_DATA::TokenType::SPACE)
             {
                 continue;
+            }
+
+            // GET THE CURRENT WORD'S COLOR.
+            auto current_word_color = ColorsByWord.find(token.Text);
+            bool current_word_color_exists = (ColorsByWord.cend() != current_word_color);
+            if (current_word_color_exists)
+            {
+                color = current_word_color->second;
+            }
+            else
+            {
+                // White.
+                color = ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f };
             }
 
             ImGuiContext& gui_context = *GImGui;
@@ -134,10 +191,13 @@ namespace GUI
 
             // SET THE TEXT COLOR.
             // A temporarily different (usually) highlight color is used when hovering over.
-            if (ImGui::IsItemHovered())
+            bool is_currently_highlighted_word = (token.Text == CurrentlyHighlightedWord) || (ImGui::IsItemHovered());
+            if (is_currently_highlighted_word)
             {
                 /// @todo   Something other than yellow for highlights?
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.0f, 1.0f));
+
+                CurrentlyHighlightedWord = token.Text;
             }
             else
             {
@@ -163,6 +223,78 @@ namespace GUI
                 color.z += 0.1f;
             }
 #endif
+        }
+    }
+
+    /// Updates the lookup of colors for the current set of verses.
+    void BibleVersesWindow::UpdateColorLookup()
+    {
+        const std::unordered_set<std::string> STOP_WORDS =
+        {
+            "a",
+            "the"
+        };
+
+        // UPDATE COLORS FOR ANY UNCOLORED WORDS.
+        std::random_device random_number_generator;
+        ImVec4 color = ImVec4{ 0.0f, 0.0f, 0.0f, 1.0f };
+        for (const BIBLE_DATA::BibleVerse& verse : Verses)
+        {
+            const std::vector<BIBLE_DATA::Token>* verse_tokens = verse.GetTokens();
+            for (const auto& token : *verse_tokens)
+            {
+                // SKIP NON-WORD TOKENS.
+                bool is_word = (BIBLE_DATA::TokenType::WORD == token.Type);
+                if (!is_word)
+                {
+                    continue;
+                }
+
+                // SKIP STORING COLORS FOR OVERLY COMMON WORDS.
+                bool is_stop_word = STOP_WORDS.contains(token.Text);
+                if (is_stop_word)
+                {
+                    continue;
+                }
+
+                // UPDATE THE CURRENT WORDS COLOR.
+                /// @todo   How to preserve colors while not re-using colors?
+                /// @todo   Upper/lowercase?
+                auto current_word_color = ColorsByWord.find(token.Text);
+                bool current_word_color_exists = (ColorsByWord.cend() != current_word_color);
+                if (!current_word_color_exists)
+                {
+                    // ASSIGN SOME RANDOM COLORS.
+                    color.x = static_cast<float>(random_number_generator()) / static_cast<float>(random_number_generator.max());
+                    color.y = static_cast<float>(random_number_generator()) / static_cast<float>(random_number_generator.max());
+                    color.z = static_cast<float>(random_number_generator()) / static_cast<float>(random_number_generator.max());
+
+                    ColorsByWord[token.Text] = color;
+                }
+            }
+        }
+    }
+
+    /// Computes statistics about the words currently displayed in the window.
+    void BibleVersesWindow::ComputeWordStatistics()
+    {
+        OccurrenceCountsByWord.clear();
+
+        for (const BIBLE_DATA::BibleVerse& verse : Verses)
+        {
+            const std::vector<BIBLE_DATA::Token>* verse_tokens = verse.GetTokens();
+            for (const auto& token : *verse_tokens)
+            {
+                // SKIP NON-WORD TOKENS.
+                bool is_word = (BIBLE_DATA::TokenType::WORD == token.Type);
+                if (!is_word)
+                {
+                    continue;
+                }
+
+                // COUNT THE WORD.
+                ++OccurrenceCountsByWord[token.Text];
+            }
         }
     }
 }

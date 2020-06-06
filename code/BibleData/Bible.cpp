@@ -52,7 +52,7 @@ namespace BIBLE_DATA
         std::vector<BibleVerse> verses;
 
         auto current_translation = TranslationsByName.at("KJV");
-       
+
         auto starting_verse = current_translation.VersesById.lower_bound(starting_verse_id);
         auto after_ending_verse = current_translation.VersesById.upper_bound(ending_verse_id);
 
@@ -62,5 +62,51 @@ namespace BIBLE_DATA
         }
 
         return verses;
+    }
+
+    /// Gets the verses containing the specified word.
+    /// @param[in]  word - The word for which to get verses containing it.
+    /// @return The verses containing the specified word.
+    std::vector<BibleVerse> Bible::GetVerses(const std::string& word) const
+    {
+        // MAKE SURE THE WORD INDEX IS POPULATED.
+        bool bible_verse_by_word_index_populated = !VersesByWord.empty();
+        if (!bible_verse_by_word_index_populated)
+        {
+            VersesByWord = BuildWordIndex();
+        }
+
+        // GET THE VERSES FOR THE SPECIFIED WORD.
+        /// @todo   More advanced substring matching?
+        auto word_and_verses_with_it = VersesByWord.find(word);
+        bool verses_exist_with_word = (VersesByWord.cend() != word_and_verses_with_it);
+        if (verses_exist_with_word)
+        {
+            return word_and_verses_with_it->second;
+        }
+        else
+        {
+            return {};
+        }
+    }
+
+    /// Builds an index for the Bible associating words with the verses containing them.
+    /// @return A lookup from words to the verses containing them.
+    std::map<std::string, std::vector<BibleVerse>> Bible::BuildWordIndex() const
+    {
+        // INDEX ALL OF THE VERSES BY WORD.
+        std::map<std::string, std::vector<BibleVerse>> verses_by_word;
+        const BibleTranslation& current_translation = TranslationsByName.at("KJV");
+        for (const auto& id_and_verse : current_translation.VersesById)
+        {
+            /// @todo   How to handle punctuation?
+            const std::vector<Token>* current_verse_tokens = id_and_verse.second.GetTokens();
+            for (const Token token : *current_verse_tokens)
+            {
+                verses_by_word[token.Text].push_back(id_and_verse.second);
+            }
+        }
+
+        return verses_by_word;
     }
 }

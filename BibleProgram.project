@@ -1,4 +1,7 @@
 #if !__EMSCRIPTEN__
+// To avoid annoyances with Windows min/max #defines.
+#define NOMINMAX
+
 #include <ThirdParty/gl3w/GL/gl3w.c>
 #endif
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <ThirdParty/imgui/imgui.h>
 #include "BibleData/BibleVerse.h"
 #include "BibleData/BibleVerseId.h"
 
@@ -23,5 +24,14 @@ namespace GUI
 
     private:
         void Render(const BIBLE_DATA::BibleVerse& verse);
+        void UpdateColorLookup();
+        void ComputeWordStatistics();
+
+        /// The word currently being hovered over by the user.
+        std::string CurrentlyHighlightedWord = "";
+        /// The colors associated with each word.  Populated on-demand as needed.
+        std::map<std::string, ImVec4> ColorsByWord = {};
+        /// Counts for the number of times each word appears in the current window.
+        std::map<std::string, unsigned int> OccurrenceCountsByWord = {};
     };
 }

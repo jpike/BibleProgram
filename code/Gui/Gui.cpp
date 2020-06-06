@@ -34,19 +34,19 @@ namespace GUI
                 ImGui::EndMenu();
             }
 
-            // RENDER A SEARCH BAR.
+            // RENDER A VERSE SEARCH BAR.
             /// @todo   Seems to return true either if enter pressed or value changed?
-            static char search_text[64];
+            static char verse_range_text[64];
             ImGui::SetNextItemWidth(256.0f);
-            bool enter_pressed = ImGui::InputTextWithHint(
+            bool verse_search_box_enter_pressed = ImGui::InputTextWithHint(
                 "###VerseReferenceSearch", 
                 "Enter book/chapter/verse range", 
-                search_text, 
-                IM_ARRAYSIZE(search_text),
+                verse_range_text,
+                IM_ARRAYSIZE(verse_range_text),
                 ImGuiInputTextFlags_EnterReturnsTrue);
-            if (enter_pressed)
+            if (verse_search_box_enter_pressed)
             {
-                std::optional<std::pair<BIBLE_DATA::BibleVerseId, BIBLE_DATA::BibleVerseId>> verse_range = BIBLE_DATA::BibleVerseId::ParseRange(search_text);
+                std::optional<std::pair<BIBLE_DATA::BibleVerseId, BIBLE_DATA::BibleVerseId>> verse_range = BIBLE_DATA::BibleVerseId::ParseRange(verse_range_text);
                 if (verse_range)
                 {
                     BibleVersesWindow.StartingVerseId = verse_range->first;
@@ -57,6 +57,29 @@ namespace GUI
                     BibleVersesWindow.Open = true;
                 }
             }
+
+            // RENDER A WORD SEARCH BAR.
+            /// @todo   This is a bad idea in the naive way - requires about 12 GB of memory.
+#if 0
+            static char word_search_text[64];
+            ImGui::SetNextItemWidth(256.0f);
+            bool word_search_box_enter_pressed = ImGui::InputTextWithHint(
+                "Search##WordSearch",
+                "Enter word",
+                word_search_text,
+                IM_ARRAYSIZE(word_search_text),
+                ImGuiInputTextFlags_EnterReturnsTrue);
+            if (word_search_box_enter_pressed)
+            {
+                BibleVersesWindow.Verses = bible.GetVerses(word_search_text);
+                if (!BibleVersesWindow.Verses.empty())
+                {
+                    BibleVersesWindow.StartingVerseId = BibleVersesWindow.Verses.front().Id;
+                    BibleVersesWindow.EndingVerseId = BibleVersesWindow.Verses.back().Id;
+                    BibleVersesWindow.Open = true;
+                }
+            }
+#endif
         }
         ImGui::EndMainMenuBar();
 
