@@ -23,6 +23,7 @@ namespace GUI
         std::vector<BIBLE_DATA::BibleVerse> Verses = {};
 
     private:
+        void UpdateAndRenderVerseContent(const std::vector<BIBLE_DATA::BibleVerse>& verses);
         void Render(const BIBLE_DATA::BibleVerse& verse);
         void UpdateColorLookup();
         void ComputeWordStatistics();
