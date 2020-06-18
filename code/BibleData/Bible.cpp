@@ -97,12 +97,31 @@ namespace BIBLE_DATA
     /// @return A lookup from words to the verses containing them.
     std::map<std::string, std::vector<BibleVerse>> Bible::BuildWordIndex()
     {
+        // KJV occurrence counts are in comments beside each word.
         static const std::unordered_set<std::string> LOWERCASE_STOP_WORDS =
         {
-            "a",
+            "a", // 8177
             "an",
-            "and",
-            "the",
+            "and", // 51696
+            "be", // 7013
+            "for", // 8971
+            "he", // 10420
+            "him", // 6659
+            "his", // 8473
+            "i", // 8854
+            "in", // 12667
+            "is", // 6989
+            "it", // 6129
+            "not", // 6596
+            "of", // 34617
+            "that", // 12912
+            "the", // 63924
+            "them", // 6430
+            "they", // 7376
+            "to", // 13562
+            "was",
+            "which", // 4413
+            "with", // 6012
         };
 
         // INDEX ALL OF THE VERSES BY WORD.

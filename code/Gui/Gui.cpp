@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <ThirdParty/imgui/imgui.h>
 #include <ThirdParty/imgui/imgui_internal.h>
@@ -114,6 +115,34 @@ namespace GUI
         /// @todo
         if (ImGui::Begin("Indexed Words"))
         {
+            using WordAndVerseIds = std::pair<std::string, std::vector<BIBLE_DATA::BibleVerseId>>;
+            std::vector<WordAndVerseIds> words_and_bible_verse_ids_by_decreasing_count;
+            for (const auto& letter_and_words : bible.BibleVersesByFirstLowercaseLetterThenImportantWord)
+            {                
+                for (const auto& word_and_bible_verse_ids : letter_and_words.second)
+                {
+                    words_and_bible_verse_ids_by_decreasing_count.emplace_back(
+                        std::make_pair(word_and_bible_verse_ids.first, word_and_bible_verse_ids.second)
+                    );
+                }
+            }
+
+            std::sort(
+                words_and_bible_verse_ids_by_decreasing_count.begin(),
+                words_and_bible_verse_ids_by_decreasing_count.end(),
+                [](const WordAndVerseIds& left, const WordAndVerseIds& right) -> bool
+                {
+                    return left.second.size() > right.second.size();
+                });
+
+            for (const auto& word_and_bible_verse_ids : words_and_bible_verse_ids_by_decreasing_count)
+            {
+                std::size_t verse_count = word_and_bible_verse_ids.second.size();
+                std::string text = word_and_bible_verse_ids.first + " = " + std::to_string(verse_count);
+                ImGui::Text(text.c_str());
+            }
+
+#if 0
             for (const auto& letter_and_words : bible.BibleVersesByFirstLowercaseLetterThenImportantWord)
             {
                 for (const auto& word_and_bible_verse_ids : letter_and_words.second)
@@ -124,6 +153,7 @@ namespace GUI
                     ImGui::Text(text.c_str());
                 }
             }
+#endif
         }
         ImGui::End();
 
