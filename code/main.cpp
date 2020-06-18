@@ -1,3 +1,4 @@
+#include <chrono>
 #include <cstdlib>
 #include <cstdint>
 #include <exception>
@@ -30,6 +31,15 @@ int main()
         std::cerr << "Failed parse." << std::endl;
         return EXIT_FAILURE;
     }
+
+    // 6 seconds, 330 MB memory usage with this added in.
+    auto index_start_time = std::chrono::system_clock::now();
+    bible->BuildWordIndex();
+    auto index_end_time = std::chrono::system_clock::now();
+    auto load_time_diff = index_end_time - index_start_time;
+    std::cout << "Index load time: " << load_time_diff.count() << std::endl;
+    std::cout << "Index load time (ms): " << std::chrono::duration_cast<std::chrono::milliseconds>(load_time_diff).count() << std::endl;
+    std::cout << "Index load time (s): " << std::chrono::duration_cast<std::chrono::seconds>(load_time_diff).count() << std::endl;
 
     // CATCH ANY EXCEPTIONS.
     // A lot of things like SDL functions can easily fail.  To easily catch generic errors, everything's wrapped
@@ -132,7 +142,7 @@ int main()
                 uint32_t remaining_time_in_ms_for_frame = MILLISECONDS_PER_FRAME - elapsed_time_in_ms_for_current_frame;
                 SDL_Delay(remaining_time_in_ms_for_frame);
             }
-            std::cout << "Frame Time (ms): " << (SDL_GetTicks() - elapsed_time_in_ms_until_previous_frame) << std::endl;
+            //std::cout << "Frame Time (ms): " << (SDL_GetTicks() - elapsed_time_in_ms_until_previous_frame) << std::endl;
             elapsed_time_in_ms_until_previous_frame = SDL_GetTicks();
         }
     }

@@ -17,6 +17,7 @@ namespace BIBLE_DATA
         void AddTranslation(const std::string& translation_name, const std::vector<BibleVerse>& verses, const std::map<BibleBookId, BibleBook>& books_by_id);
         std::vector<BibleVerse> GetVerses(const BibleVerseId& starting_verse_id, const BibleVerseId& ending_verse_id) const;
         std::vector<BibleVerse> GetVerses(const std::string& word) const;
+        std::map<std::string, std::vector<BibleVerse>> BuildWordIndex();
 
         /// The books in the Bible, mapped by their IDs.
         /// This member variable defines the overall organizational structure, rather than content, of the Bible.
@@ -29,7 +30,9 @@ namespace BIBLE_DATA
         /// Verses by word.  Populated dynamically as needed.
         mutable std::map<std::string, std::vector<BibleVerse>> VersesByWord = {};
 
-    private:
-        std::map<std::string, std::vector<BibleVerse>> BuildWordIndex() const;
+        std::map<
+            char,
+            std::map<std::string, std::vector<BibleVerseId>>
+            > BibleVersesByFirstLowercaseLetterThenImportantWord = {};
     };
 }

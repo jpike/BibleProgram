@@ -111,6 +111,22 @@ namespace GUI
 
         BibleVersesWindow.UpdateAndRender();
 
+        /// @todo
+        if (ImGui::Begin("Indexed Words"))
+        {
+            for (const auto& letter_and_words : bible.BibleVersesByFirstLowercaseLetterThenImportantWord)
+            {
+                for (const auto& word_and_bible_verse_ids : letter_and_words.second)
+                {
+                    //bible.TranslationsByName.at("KJV").VersesById[word_and_bible_verse_ids.second];
+                    std::size_t verse_count = word_and_bible_verse_ids.second.size();
+                    std::string text = word_and_bible_verse_ids.first + " = " + std::to_string(verse_count);
+                    ImGui::Text(text.c_str());
+                }
+            }
+        }
+        ImGui::End();
+
         MetricsWindow.UpdateAndRender();
         StyleEditorWindow.UpdateAndRender();
         AboutWindow.UpdateAndRender();

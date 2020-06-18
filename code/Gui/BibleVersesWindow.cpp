@@ -49,7 +49,15 @@ namespace GUI
                 ImGui::EndMenuBar();
             }
 
+            //ImGui::Columns(3);
             UpdateAndRenderVerseContent(Verses);
+#if 0
+            ImGui::NextColumn();
+            ImGui::Text("2nd column");
+            ImGui::NextColumn();
+            ImGui::Text("3rd column");
+            ImGui::Columns();
+#endif
         }
         ImGui::End();
 

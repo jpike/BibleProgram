@@ -1,4 +1,7 @@
+#include <algorithm>
+#include <cctype>
 #include <unordered_map>
+#include <unordered_set>
 #include "BibleData/Bible.h"
 
 namespace BIBLE_DATA
@@ -73,7 +76,7 @@ namespace BIBLE_DATA
         bool bible_verse_by_word_index_populated = !VersesByWord.empty();
         if (!bible_verse_by_word_index_populated)
         {
-            VersesByWord = BuildWordIndex();
+            //VersesByWord = BuildWordIndex();
         }
 
         // GET THE VERSES FOR THE SPECIFIED WORD.
@@ -92,8 +95,16 @@ namespace BIBLE_DATA
 
     /// Builds an index for the Bible associating words with the verses containing them.
     /// @return A lookup from words to the verses containing them.
-    std::map<std::string, std::vector<BibleVerse>> Bible::BuildWordIndex() const
+    std::map<std::string, std::vector<BibleVerse>> Bible::BuildWordIndex()
     {
+        static const std::unordered_set<std::string> LOWERCASE_STOP_WORDS =
+        {
+            "a",
+            "an",
+            "and",
+            "the",
+        };
+
         // INDEX ALL OF THE VERSES BY WORD.
         std::map<std::string, std::vector<BibleVerse>> verses_by_word;
         const BibleTranslation& current_translation = TranslationsByName.at("KJV");
@@ -103,7 +114,30 @@ namespace BIBLE_DATA
             const std::vector<Token>* current_verse_tokens = id_and_verse.second.GetTokens();
             for (const Token token : *current_verse_tokens)
             {
-                verses_by_word[token.Text].push_back(id_and_verse.second);
+                bool is_word = (TokenType::WORD == token.Type);
+                if (!is_word)
+                {
+                    continue;
+                }
+                
+                std::string lowercase_word = token.Text;
+                std::transform(
+                    lowercase_word.begin(),
+                    lowercase_word.end(),
+                    lowercase_word.begin(),
+                    [](const char character) { return static_cast<char>(std::tolower(character)); });
+
+#if 0
+                bool is_stop_word = LOWERCASE_STOP_WORDS.contains(lowercase_word);
+                if (is_stop_word)
+                {
+                    continue;
+                }
+#endif
+
+                
+                char first_character = lowercase_word.front();
+                BibleVersesByFirstLowercaseLetterThenImportantWord[first_character][lowercase_word].push_back(id_and_verse.first);
             }
         }
 
