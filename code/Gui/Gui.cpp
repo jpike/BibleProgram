@@ -94,7 +94,7 @@ namespace GUI
                 .ChapterNumber = selected_chapter->Number,
                 .VerseNumber = 1
             };
-            auto chapter_starting_verse = bible.TranslationsByName.at("KJV").VersesById.lower_bound(chapter_starting_verse_id);
+            auto chapter_starting_verse = bible.TranslationsByName.at("KJV")->VersesById.lower_bound(chapter_starting_verse_id);
             BIBLE_DATA::BibleVerseId chapter_ending_verse_id =
             {
                 .Book = selected_chapter->Book,

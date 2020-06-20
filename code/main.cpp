@@ -5,6 +5,8 @@
 #include <filesystem>
 #include <iostream>
 #include <optional>
+#include <utility>
+#include <variant>
 #include <ThirdParty/gl3w/GL/gl3w.h>
 #include <ThirdParty/gl3w/GL/glcorearb.h>
 #include <ThirdParty/imgui/imgui.h>
@@ -13,25 +15,16 @@
 #include <ThirdParty/SDL/SDL.h>
 #undef main
 #include "BibleData/Bible.h"
-#include "BibleData/BibleDataFiles.h"
-#include "BibleData/OsisXmlFile.h"
-#include "BibleData/VersePerLineFile.h"
+#include "BibleData/BibleTranslation.h"
+#include "BibleData/Files/BibleDataFiles.h"
 #include "Gui/Gui.h"
 
 int main()
 {
-    // PARSE THE BIBLE DATA.
-    std::optional<BIBLE_DATA::Bible> bible = BIBLE_DATA::BibleDataFiles::Parse();
-    if (bible)
-    {
-        std::cout << "Successful parse." << std::endl;
-    }
-    else
-    {
-        std::cerr << "Failed parse." << std::endl;
-        return EXIT_FAILURE;
-    }
+    // START LOADING THE BIBLE DATA.
+    BIBLE_DATA::FILES::BibleDataFiles bible_data_files = std::move(BIBLE_DATA::FILES::BibleDataFiles::StartLoading());
 
+#if 0
     // 6 seconds, 330 MB memory usage with this added in.
     auto index_start_time = std::chrono::system_clock::now();
     bible->BuildWordIndex();
@@ -40,6 +33,7 @@ int main()
     std::cout << "Index load time: " << load_time_diff.count() << std::endl;
     std::cout << "Index load time (ms): " << std::chrono::duration_cast<std::chrono::milliseconds>(load_time_diff).count() << std::endl;
     std::cout << "Index load time (s): " << std::chrono::duration_cast<std::chrono::seconds>(load_time_diff).count() << std::endl;
+#endif
 
     // CATCH ANY EXCEPTIONS.
     // A lot of things like SDL functions can easily fail.  To easily catch generic errors, everything's wrapped
@@ -85,6 +79,9 @@ int main()
         const char* const GLSL_VERSION = "#version 130";
         ImGui_ImplOpenGL3_Init(GLSL_VERSION);
 
+
+        BIBLE_DATA::Bible bible;
+
 #if 0
         GUI::Gui gui
         { 
@@ -113,13 +110,24 @@ int main()
                 }
             }
 
+            // UPDATE THE BIBLE DATA IF NEW DATA HAS BEEN LOADED.
+            std::optional<BIBLE_DATA::FILES::BibleDataFile> next_bible_data_file = bible_data_files.GetNextLoadedFile();
+            if (next_bible_data_file)
+            {   
+                auto new_bible_translation = BIBLE_DATA::BibleTranslation::Create(
+                    next_bible_data_file->TranslationName,
+                    next_bible_data_file->Verses,
+                    next_bible_data_file->BooksById);
+                bible.TranslationsByName[new_bible_translation->Name] = new_bible_translation;
+            }
+
             // DRAWING.
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplSDL2_NewFrame(window);
             ImGui::NewFrame();
             ImGui::ShowDemoWindow(&show_demo_window);
 
-            gui.UpdateAndRender(*bible);
+            gui.UpdateAndRender(bible);
 
             ImGui::Render();
             ImGuiIO& io = ImGui::GetIO();

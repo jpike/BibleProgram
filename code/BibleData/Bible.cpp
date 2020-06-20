@@ -42,7 +42,8 @@ namespace BIBLE_DATA
 
         // ADD THE TRANSLATION ITSELF.
         BooksById = books;
-        BibleTranslation translation = BibleTranslation::Populate(verses, books);
+        auto translation = BibleTranslation::Populate(verses, books);
+        translation->Name = translation_name;
         TranslationsByName[translation_name] = translation;
     }
 
@@ -54,10 +55,10 @@ namespace BIBLE_DATA
     {
         std::vector<BibleVerse> verses;
 
-        auto current_translation = TranslationsByName.at("KJV");
+        const auto& current_translation = TranslationsByName.at("KJV");
 
-        auto starting_verse = current_translation.VersesById.lower_bound(starting_verse_id);
-        auto after_ending_verse = current_translation.VersesById.upper_bound(ending_verse_id);
+        auto starting_verse = current_translation->VersesById.lower_bound(starting_verse_id);
+        auto after_ending_verse = current_translation->VersesById.upper_bound(ending_verse_id);
 
         for (auto& id_and_verse = starting_verse; id_and_verse != after_ending_verse; ++id_and_verse)
         {
@@ -126,8 +127,8 @@ namespace BIBLE_DATA
 
         // INDEX ALL OF THE VERSES BY WORD.
         std::map<std::string, std::vector<BibleVerse>> verses_by_word;
-        const BibleTranslation& current_translation = TranslationsByName.at("KJV");
-        for (const auto& id_and_verse : current_translation.VersesById)
+        const auto& current_translation = TranslationsByName.at("KJV");
+        for (const auto& id_and_verse : current_translation->VersesById)
         {
             /// @todo   How to handle punctuation?
             const std::vector<Token>* current_verse_tokens = id_and_verse.second.GetTokens();

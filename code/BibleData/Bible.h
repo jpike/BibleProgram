@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 #include <map>
 #include "BibleData/BibleBook.h"
 #include "BibleData/BibleTranslation.h"
@@ -25,7 +26,7 @@ namespace BIBLE_DATA
         std::map<BibleBookId, BibleBook> BooksById = {};
         /// A mapping of translation names to the content of the actual translations.
         /// An ordered, rather than unordered map, to support automatic alphabetic sorting.
-        std::map<std::string, BibleTranslation> TranslationsByName = {};
+        std::map<std::string, std::shared_ptr<BibleTranslation>> TranslationsByName = {};
 
         /// Verses by word.  Populated dynamically as needed.
         mutable std::map<std::string, std::vector<BibleVerse>> VersesByWord = {};
