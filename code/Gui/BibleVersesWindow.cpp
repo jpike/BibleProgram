@@ -10,7 +10,8 @@
 namespace GUI
 {
     /// Updates and renders a single frame of the window, if it's open.
-    void BibleVersesWindow::UpdateAndRender()
+    /// @param[in]  colors_by_word - Colors for words.
+    void BibleVersesWindow::UpdateAndRender(const std::map<std::string, ImVec4>& colors_by_word)
     {
         // DON'T RENDER ANYTHING IF THE WINDOW ISN'T OPEN.
         if (!Open)
@@ -50,7 +51,7 @@ namespace GUI
             }
 
             //ImGui::Columns(3);
-            UpdateAndRenderVerseContent(Verses);
+            UpdateAndRenderVerseContent(Verses, colors_by_word);
 #if 0
             ImGui::NextColumn();
             ImGui::Text("2nd column");
@@ -177,7 +178,8 @@ namespace GUI
     /// Some of the implementation here is based on ImGui's multi-line text input
     /// but modified/simplified for our purposes here.
     /// @param[in]  verses - The verse content to render.
-    void BibleVersesWindow::UpdateAndRenderVerseContent(const std::vector<BIBLE_DATA::BibleVerse>& verses)
+    /// @param[in]  colors_by_word - Colors for words.
+    void BibleVersesWindow::UpdateAndRenderVerseContent(const std::vector<BIBLE_DATA::BibleVerse>& verses, const std::map<std::string, ImVec4>& colors_by_word)
     {
         // COMPUTE THE BOUNDING BOX FOR THE VERSE TEXT.
         ImGuiWindow* window = ImGui::GetCurrentWindow();
@@ -749,13 +751,39 @@ namespace GUI
         // RENDER ALL OF THE TEXT.
         for (const TextRenderCommand& text_render_command : text_render_commands)
         {
+            // CALCULATE THE BOUNDING BOX FOR THE TEXT.
+            ImVec2 text_size = ImGui::CalcTextSize(text_render_command.Text.c_str());
+            ImRect text_bounding_box(text_render_command.DrawPosition, text_render_command.DrawPosition + text_size);
+            /// @todo Adding items here messed a bit with scrolling.
+            ImGui::ItemSize(text_size);
+            ImGui::ItemAdd(text_bounding_box, 0);
+
+            std::string lowercase_word = text_render_command.Text;
+            std::transform(
+                lowercase_word.begin(),
+                lowercase_word.end(),
+                lowercase_word.begin(),
+                [](const char character) { return static_cast<char>(std::tolower(character)); });
+
             // GET THE COLOR.
             ImVec4 color = text_render_command.Color;
-            auto current_word_color = ColorsByWord.find(text_render_command.Text);
-            bool current_word_color_exists = (ColorsByWord.cend() != current_word_color);
+            auto current_word_color = colors_by_word.find(lowercase_word);
+            bool current_word_color_exists = (colors_by_word.cend() != current_word_color);
             if (current_word_color_exists)
             {
                 color = current_word_color->second;
+            }
+
+            // SET THE TEXT COLOR.
+            // A temporarily different (usually) highlight color is used when hovering over.
+            bool mouse_over_text_bounding_box = ImGui::IsItemHovered();
+            bool is_currently_highlighted_word = (lowercase_word == CurrentlyHighlightedWord) || mouse_over_text_bounding_box;
+            if (is_currently_highlighted_word)
+            {
+                /// @todo   Something other than yellow for highlights?
+                color = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
+
+                CurrentlyHighlightedWord = lowercase_word;
             }
                    
             ImU32 packed_color = ImGui::ColorConvertFloat4ToU32(color);
@@ -798,6 +826,7 @@ namespace GUI
             }
 
             // GET THE CURRENT WORD'S COLOR.
+#if 0
             auto current_word_color = ColorsByWord.find(token.Text);
             bool current_word_color_exists = (ColorsByWord.cend() != current_word_color);
             if (current_word_color_exists)
@@ -805,6 +834,7 @@ namespace GUI
                 color = current_word_color->second;
             }
             else
+#endif
             {
                 // White.
                 color = ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f };
@@ -912,6 +942,7 @@ namespace GUI
                 // UPDATE THE CURRENT WORDS COLOR.
                 /// @todo   How to preserve colors while not re-using colors?
                 /// @todo   Upper/lowercase?
+#if 0
                 auto current_word_color = ColorsByWord.find(token.Text);
                 bool current_word_color_exists = (ColorsByWord.cend() != current_word_color);
                 if (!current_word_color_exists)
@@ -923,6 +954,7 @@ namespace GUI
 
                     ColorsByWord[token.Text] = color;
                 }
+#endif
             }
         }
     }

@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <iostream>
+#include <random>
+#include <unordered_set>
 #include <ThirdParty/imgui/imgui.h>
 #include <ThirdParty/imgui/imgui_internal.h>
 #include "Debugging/Timer.h"
@@ -11,16 +13,50 @@ namespace GUI
     /// @param[in]  bible - The Bible to display in the window.
     void Gui::UpdateAndRender(const BIBLE_DATA::Bible& bible)
     {
+        // SELECT THE FIRST TRANSLATION BY DEFAULT.
+        bool any_translation_selected = !CurrentTranslationName.empty();
+        if (!any_translation_selected)
+        {
+            if (!bible.TranslationsByName.empty())
+            {
+                CurrentTranslationName = bible.TranslationsByName.begin()->first;
+            }
+        }
+
         // RENDER THE MAIN MENU BAR.
         if (ImGui::BeginMainMenuBar())
         {
             // No shortcut keys are displayed for menu items since ImGui doesn't currently handle them.
             constexpr char* NO_SHORTCUT_KEYS = nullptr;
 
+            // RENDER A MENU FOR SELECTING THE CURRENT TRANSLATION.
+            if (ImGui::BeginMenu("Translations"))
+            {
+                for (const auto& names_and_translations : bible.TranslationsByName)
+                {
+                    // ALLOW THE USED TO SELECT A TRANSLATION.
+                    bool is_selected = (names_and_translations.first == CurrentTranslationName);
+                    if (ImGui::MenuItem(names_and_translations.first.c_str(), NO_SHORTCUT_KEYS, is_selected))
+                    {
+                        CurrentTranslationName = names_and_translations.first;
+                    }
+                }
+
+                ImGui::EndMenu();
+            }
+
             // RENDER THE MENU FOR THE ACCESSING AVAILABLE WINDOWS.
             if (ImGui::BeginMenu("Windows"))
             {
                 ImGui::MenuItem("Bible Books", NO_SHORTCUT_KEYS, &BibleBookWindow.Open);
+                ImGui::MenuItem("Word Statistics", NO_SHORTCUT_KEYS, &WordStatisticsWindow.Open);
+                if (ImGui::MenuItem("Word Colors", NO_SHORTCUT_KEYS, &WordColorsWindow.Open))
+                {
+                    if (ColorsByWord.empty())
+                    {
+                        UpdateColorLookup(bible);
+                    }
+                }
 
                 ImGui::EndMenu();
             }
@@ -60,8 +96,6 @@ namespace GUI
             }
 
             // RENDER A WORD SEARCH BAR.
-            /// @todo   This is a bad idea in the naive way - requires about 12 GB of memory.
-#if 0
             static char word_search_text[64];
             ImGui::SetNextItemWidth(256.0f);
             bool word_search_box_enter_pressed = ImGui::InputTextWithHint(
@@ -72,6 +106,8 @@ namespace GUI
                 ImGuiInputTextFlags_EnterReturnsTrue);
             if (word_search_box_enter_pressed)
             {
+#if 0
+                /// @todo   This is a bad idea in the naive way - requires about 12 GB of memory.
                 BibleVersesWindow.Verses = bible.GetVerses(word_search_text);
                 if (!BibleVersesWindow.Verses.empty())
                 {
@@ -79,8 +115,8 @@ namespace GUI
                     BibleVersesWindow.EndingVerseId = BibleVersesWindow.Verses.back().Id;
                     BibleVersesWindow.Open = true;
                 }
-            }
 #endif
+            }
         }
         ImGui::EndMainMenuBar();
 
@@ -88,30 +124,48 @@ namespace GUI
         const BIBLE_DATA::BibleChapter* selected_chapter = BibleBookWindow.UpdateAndRender(bible);
         if (selected_chapter)
         {
-            BIBLE_DATA::BibleVerseId chapter_starting_verse_id =
+            if (!CurrentTranslationName.empty())
             {
-                .Book = selected_chapter->Book,
-                .ChapterNumber = selected_chapter->Number,
-                .VerseNumber = 1
-            };
-            auto chapter_starting_verse = bible.TranslationsByName.at("KJV")->VersesById.lower_bound(chapter_starting_verse_id);
-            BIBLE_DATA::BibleVerseId chapter_ending_verse_id =
-            {
-                .Book = selected_chapter->Book,
-                .ChapterNumber = selected_chapter->Number,
-                .VerseNumber = static_cast<unsigned int>(selected_chapter->VersesByNumber.size())
-            };
+                std::shared_ptr<BIBLE_DATA::BibleTranslation> current_translation = bible.TranslationsByName.at(CurrentTranslationName);
+                BIBLE_DATA::BibleVerseId chapter_starting_verse_id =
+                {
+                    .Book = selected_chapter->Book,
+                    .ChapterNumber = selected_chapter->Number,
+                    .VerseNumber = 1
+                };
+                auto chapter_starting_verse = current_translation->VersesById.lower_bound(chapter_starting_verse_id);
+                BIBLE_DATA::BibleVerseId chapter_ending_verse_id =
+                {
+                    .Book = selected_chapter->Book,
+                    .ChapterNumber = selected_chapter->Number,
+                    .VerseNumber = static_cast<unsigned int>(selected_chapter->VersesByNumber.size())
+                };
 
-            BibleVersesWindow.StartingVerseId = chapter_starting_verse_id;
-            BibleVersesWindow.EndingVerseId = chapter_ending_verse_id;
-            BibleVersesWindow.Verses = bible.GetVerses(chapter_starting_verse_id, chapter_ending_verse_id);
+                BibleVersesWindow.StartingVerseId = chapter_starting_verse_id;
+                BibleVersesWindow.EndingVerseId = chapter_ending_verse_id;
+                BibleVersesWindow.Verses = bible.GetVerses(chapter_starting_verse_id, chapter_ending_verse_id);
 
-            /// @todo   Get verses and render!
-            BibleVersesWindow.Open = true;
+                /// @todo   Get verses and render!
+                BibleVersesWindow.Open = true;
+            }
         }
 
-        BibleVersesWindow.UpdateAndRender();
+        BibleVersesWindow.UpdateAndRender(ColorsByWord);
 
+        WordColorsWindow.UpdateAndRender(ColorsByWord);
+
+        if (!CurrentTranslationName.empty())
+        {
+            std::shared_ptr<BIBLE_DATA::BibleTranslation> current_translation = bible.TranslationsByName.at(CurrentTranslationName);
+
+            std::shared_ptr<BIBLE_DATA::BibleWordIndex> word_index = current_translation->GetWordIndex();
+            if (word_index)
+            {
+                WordStatisticsWindow.UpdateAndRender(word_index->OccurrenceCountsByLowercaseWord);
+            }
+        }
+
+#if 0
         /// @todo
         if (ImGui::Begin("Indexed Words"))
         {
@@ -141,7 +195,6 @@ namespace GUI
                 std::string text = word_and_bible_verse_ids.first + " = " + std::to_string(verse_count);
                 ImGui::Text(text.c_str());
             }
-
 #if 0
             for (const auto& letter_and_words : bible.BibleVersesByFirstLowercaseLetterThenImportantWord)
             {
@@ -156,10 +209,96 @@ namespace GUI
 #endif
         }
         ImGui::End();
+#endif
 
         MetricsWindow.UpdateAndRender();
         StyleEditorWindow.UpdateAndRender();
         AboutWindow.UpdateAndRender();
+    }
+
+    /// Updates the lookup of colors.
+    void Gui::UpdateColorLookup(const BIBLE_DATA::Bible& bible)
+    {
+        // KJV occurrence counts are in comments beside each word.
+        static const std::unordered_set<std::string> LOWERCASE_STOP_WORDS =
+        {
+            "a", // 8177
+            "an",
+            "and", // 51696
+            "be", // 7013
+            "for", // 8971
+            "he", // 10420
+            "him", // 6659
+            "his", // 8473
+            "i", // 8854
+            "in", // 12667
+            "is", // 6989
+            "it", // 6129
+            "not", // 6596
+            "of", // 34617
+            "that", // 12912
+            "the", // 63924
+            "them", // 6430
+            "they", // 7376
+            "to", // 13562
+            "was",
+            "which", // 4413
+            "with", // 6012
+        };
+
+        if (CurrentTranslationName.empty())
+        {
+            return;
+        }
+
+        std::shared_ptr<BIBLE_DATA::BibleTranslation> current_translation = bible.TranslationsByName.at(CurrentTranslationName);
+
+
+        // UPDATE COLORS FOR ANY UNCOLORED WORDS.
+        std::random_device random_number_generator;
+        ImVec4 color = ImVec4{ 0.0f, 0.0f, 0.0f, 1.0f };
+        for (const auto& id_and_verse : current_translation->VersesById)
+        {
+            const std::vector<BIBLE_DATA::Token>* verse_tokens = id_and_verse.second.GetTokens();
+            for (const auto& token : *verse_tokens)
+            {
+                // SKIP NON-WORD TOKENS.
+                bool is_word = (BIBLE_DATA::TokenType::WORD == token.Type);
+                if (!is_word)
+                {
+                    continue;
+                }
+
+                std::string lowercase_word = token.Text;
+                std::transform(
+                    lowercase_word.begin(),
+                    lowercase_word.end(),
+                    lowercase_word.begin(),
+                    [](const char character) { return static_cast<char>(std::tolower(character)); });
+
+                // SKIP STORING COLORS FOR OVERLY COMMON WORDS.
+                bool is_stop_word = LOWERCASE_STOP_WORDS.contains(lowercase_word);
+                if (is_stop_word)
+                {
+                    continue;
+                }
+
+                // UPDATE THE CURRENT WORDS COLOR.
+                /// @todo   How to preserve colors while not re-using colors?
+                /// @todo   Upper/lowercase?
+                auto current_word_color = ColorsByWord.find(lowercase_word);
+                bool current_word_color_exists = (ColorsByWord.cend() != current_word_color);
+                if (!current_word_color_exists)
+                {
+                    // ASSIGN SOME RANDOM COLORS.
+                    color.x = static_cast<float>(random_number_generator()) / static_cast<float>(random_number_generator.max());
+                    color.y = static_cast<float>(random_number_generator()) / static_cast<float>(random_number_generator.max());
+                    color.z = static_cast<float>(random_number_generator()) / static_cast<float>(random_number_generator.max());
+
+                    ColorsByWord[lowercase_word] = color;
+                }
+            }
+        }
     }
 
 #if 0

@@ -15,7 +15,7 @@ namespace BIBLE_DATA
     class Bible
     {
     public:
-        void AddTranslation(const std::string& translation_name, const std::vector<BibleVerse>& verses, const std::map<BibleBookId, BibleBook>& books_by_id);
+        void AddTranslation(const std::shared_ptr<BibleTranslation>& translation);
         std::vector<BibleVerse> GetVerses(const BibleVerseId& starting_verse_id, const BibleVerseId& ending_verse_id) const;
         std::vector<BibleVerse> GetVerses(const std::string& word) const;
         std::map<std::string, std::vector<BibleVerse>> BuildWordIndex();

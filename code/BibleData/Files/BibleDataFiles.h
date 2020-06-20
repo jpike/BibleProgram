@@ -20,6 +20,7 @@ namespace BIBLE_DATA::FILES
         static BibleDataFiles StartLoading();
         explicit BibleDataFiles() = default;
         BibleDataFiles(BibleDataFiles&&) = default;
+        BibleDataFiles& operator=(BibleDataFiles&&) = default;
 
         // FILE RETRIEVAL.
         std::optional<BibleDataFile> GetNextLoadedFile();

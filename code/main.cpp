@@ -22,7 +22,13 @@
 int main()
 {
     // START LOADING THE BIBLE DATA.
+    auto index_start_time = std::chrono::system_clock::now();
     BIBLE_DATA::FILES::BibleDataFiles bible_data_files = std::move(BIBLE_DATA::FILES::BibleDataFiles::StartLoading());
+    auto index_end_time = std::chrono::system_clock::now();
+    auto load_time_diff = index_end_time - index_start_time;
+    std::cout << "Initial bible data files load time: " << load_time_diff.count() << std::endl;
+    std::cout << "Initial bible data files load time (ms): " << std::chrono::duration_cast<std::chrono::milliseconds>(load_time_diff).count() << std::endl;
+    std::cout << "Initial bible data files load time (s): " << std::chrono::duration_cast<std::chrono::seconds>(load_time_diff).count() << std::endl;
 
 #if 0
     // 6 seconds, 330 MB memory usage with this added in.
@@ -90,7 +96,7 @@ int main()
         };
 #else
         GUI::Gui gui;
-#endif
+#endif       
 
         // UPDATING.
         bool show_demo_window = true;
@@ -113,12 +119,19 @@ int main()
             // UPDATE THE BIBLE DATA IF NEW DATA HAS BEEN LOADED.
             std::optional<BIBLE_DATA::FILES::BibleDataFile> next_bible_data_file = bible_data_files.GetNextLoadedFile();
             if (next_bible_data_file)
-            {   
+            {
+                // Note: slightly faster to create translation here in main thread rather than in separate threads.
+                auto translation_start_time = std::chrono::system_clock::now();
                 auto new_bible_translation = BIBLE_DATA::BibleTranslation::Create(
                     next_bible_data_file->TranslationName,
                     next_bible_data_file->Verses,
                     next_bible_data_file->BooksById);
-                bible.TranslationsByName[new_bible_translation->Name] = new_bible_translation;
+                bible.AddTranslation(new_bible_translation);
+                auto translation_end_time = std::chrono::system_clock::now();
+                auto translation_time_diff = translation_end_time - translation_start_time;
+                std::cout << "Translation bible data files load time: " << translation_time_diff.count() << std::endl;
+                std::cout << "Translation bible data files load time (ms): " << std::chrono::duration_cast<std::chrono::milliseconds>(translation_time_diff).count() << std::endl;
+                std::cout << "Translation bible data files load time (s): " << std::chrono::duration_cast<std::chrono::seconds>(translation_time_diff).count() << std::endl;
             }
 
             // DRAWING.

@@ -17,6 +17,7 @@
 #include "BibleData/BibleTranslation.cpp"
 #include "BibleData/BibleVerse.cpp"
 #include "BibleData/BibleVerseId.cpp"
+#include "BibleData/BibleWordIndex.cpp"
 #include "BibleData/Files/BibleDataFile.cpp"
 #include "BibleData/Files/BibleDataFiles.cpp"
 #include "Gui/BibleBookWindow.cpp"
@@ -25,6 +26,8 @@
 #include "Gui/Debugging/GuiMetricsWindow.cpp"
 #include "Gui/Debugging/StyleEditorWindow.cpp"
 #include "Gui/Gui.cpp"
+#include "Gui/WordColorsWindow.cpp"
+#include "Gui/WordStatisticsWindow.cpp"
 
 #if __EMSCRIPTEN__
 #include "main_emscripten.cpp"
