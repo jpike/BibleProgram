@@ -66,10 +66,6 @@ namespace BIBLE_DATA::FILES
 
             // STORE THE PARSED VERSE.
             parsed_bible.Verses.push_back(verse);
-
-            // PLACE THE VERSE IN ITS BOOK.
-            parsed_bible.BooksById[book_id].Id = book_id;
-            parsed_bible.BooksById[book_id].AddVerse(verse);
         }
 
         // RETURN THE PARSED FILE.
@@ -162,10 +158,6 @@ namespace BIBLE_DATA::FILES
                         /// \todo .Tokens = verse_tokens
                     };
                     parsed_bible.Verses.push_back(verse);
-
-                    // PLACE THE VERSE IN ITS BOOK.
-                    parsed_bible.BooksById[book_id].Id = book_id;
-                    parsed_bible.BooksById[book_id].AddVerse(verse);
                 }
             }
         }

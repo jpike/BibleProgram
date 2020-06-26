@@ -5,7 +5,7 @@ namespace BIBLE_DATA
 {
     /// Populates a Bible translation from the provided verses.
     /// @param[in]  verses - The verses included in the translation.
-    std::shared_ptr<BibleTranslation> BibleTranslation::Populate(const std::vector<BibleVerse>& verses, const std::map<BibleBookId, BibleBook>& books)
+    std::shared_ptr<BibleTranslation> BibleTranslation::Populate(const std::vector<BibleVerse>& verses)
     {
         auto translation = std::make_shared<BibleTranslation>();
 
@@ -14,7 +14,6 @@ namespace BIBLE_DATA
         {
             translation->VersesById[verse.Id] = verse;
         }
-        translation->BooksById = books;
 
         return translation;
     }
@@ -22,10 +21,9 @@ namespace BIBLE_DATA
     /// @todo
     std::shared_ptr<BibleTranslation> BibleTranslation::Create(
         const std::string& translation_name,
-        const std::vector<BibleVerse>& verses,
-        const std::map<BibleBookId, BibleBook>& books)
+        const std::vector<BibleVerse>& verses)
     {
-        auto translation = Populate(verses, books);
+        auto translation = Populate(verses);
         translation->Name = translation_name;
 
         translation->WordIndexBeingLoaded = std::async(std::launch::async, [translation]() { return translation->BuildWordIndex(); });
@@ -43,6 +41,11 @@ namespace BIBLE_DATA
 
         std::vector<BibleVerse*> verses;
 
+        book;
+        chapter_number;
+        starting_verse_number;
+        ending_verse_number;
+#if 0
         BibleChapter& chapter = BooksById[book].ChaptersByNumber[chapter_number];
 
         auto chapter_starting_verse = chapter.VersesByNumber.lower_bound(starting_verse_number);
@@ -52,6 +55,7 @@ namespace BIBLE_DATA
         {
             verses.push_back(&id_and_verse->second);
         }
+#endif
 
         return verses;
     }

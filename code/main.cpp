@@ -4,6 +4,7 @@
 #include <exception>
 #include <filesystem>
 #include <iostream>
+#include <memory>
 #include <optional>
 #include <utility>
 #include <variant>
@@ -17,7 +18,66 @@
 #include "BibleData/Bible.h"
 #include "BibleData/BibleTranslation.h"
 #include "BibleData/Files/BibleDataFiles.h"
+#include "Debugging/Timer.h"
 #include "Gui/Gui.h"
+
+int main2()
+{
+#if SERIAL
+    using ClockType = std::chrono::high_resolution_clock;
+
+    DEBUGGING::Timer<ClockType> main_timer("Main"); // 4353ms
+    {
+        DEBUGGING::Timer<ClockType> kjv_timer("KJV load"); // 1357ms
+        auto kjv = BIBLE_DATA::FILES::BibleDataFile::ParseVersePerLineFile("KJV", "data/SacredTexts/kjvdat.txt");
+    }
+
+    {
+        DEBUGGING::Timer<ClockType> bbe_timer("BBE load"); // 1001ms
+        auto bbe = BIBLE_DATA::FILES::BibleDataFile::ParseOsisXmlFile("BBE", "data/GratisBible/bbe.xml");
+    }
+
+    {
+        DEBUGGING::Timer<ClockType> web_timer("WEB load"); // 993ms
+        auto web = BIBLE_DATA::FILES::BibleDataFile::ParseOsisXmlFile("WEB", "data/GratisBible/web.xml");
+    }
+
+    {
+        DEBUGGING::Timer<ClockType> ylt_timer("YLT load"); // 1001ms
+        auto ylt = BIBLE_DATA::FILES::BibleDataFile::ParseOsisXmlFile("YLT", "data/GratisBible/ylt.xml");
+    }
+#endif
+
+    using ClockType = std::chrono::high_resolution_clock;
+
+    DEBUGGING::Timer main_timer("Main"); // 3021ms
+
+    auto kjv_timer = std::make_unique<DEBUGGING::Timer<ClockType>>("KJV load"); // 2715ms
+    auto kjv_bible_loading = std::async(std::launch::async, [] { return BIBLE_DATA::FILES::BibleDataFile::ParseVersePerLineFile("KJV", "data/SacredTexts/kjvdat.txt"); });
+
+    auto bbe_timer = std::make_unique<DEBUGGING::Timer<ClockType>>("BBE load"); // 2715ms
+    auto bbe_bible_loading = std::async(std::launch::async, [] { return BIBLE_DATA::FILES::BibleDataFile::ParseOsisXmlFile("BBE", "data/GratisBible/bbe.xml"); });
+
+    auto web_timer = std::make_unique<DEBUGGING::Timer<ClockType>>("WEB load"); // 2715ms
+    auto web_bible_loading = std::async(std::launch::async, [] { return BIBLE_DATA::FILES::BibleDataFile::ParseOsisXmlFile("WEB", "data/GratisBible/web.xml"); });
+
+    auto ylt_timer = std::make_unique<DEBUGGING::Timer<ClockType>>("YLT load"); // 2715ms
+    auto ylt_bible_loading = std::async(std::launch::async, [] { return BIBLE_DATA::FILES::BibleDataFile::ParseOsisXmlFile("YLT", "data/GratisBible/ylt.xml"); });
+    
+    auto kjv = kjv_bible_loading.get();
+    kjv_timer.reset();
+
+    auto bbe = bbe_bible_loading.get();
+    bbe_timer.reset();
+
+    auto web = web_bible_loading.get();
+    web_timer.reset();
+
+    auto ylt = ylt_bible_loading.get();
+    ylt_timer.reset();
+
+    return 0;
+}
 
 int main()
 {
@@ -124,8 +184,7 @@ int main()
                 auto translation_start_time = std::chrono::system_clock::now();
                 auto new_bible_translation = BIBLE_DATA::BibleTranslation::Create(
                     next_bible_data_file->TranslationName,
-                    next_bible_data_file->Verses,
-                    next_bible_data_file->BooksById);
+                    next_bible_data_file->Verses);
                 bible.AddTranslation(new_bible_translation);
                 auto translation_end_time = std::chrono::system_clock::now();
                 auto translation_time_diff = translation_end_time - translation_start_time;

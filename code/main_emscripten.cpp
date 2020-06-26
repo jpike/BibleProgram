@@ -10,8 +10,7 @@
 #include <ThirdParty/imgui/imgui_impl_sdl.h>
 #include <ThirdParty/SDL/SDL.h>
 #undef main
-#include "BibleData/OsisXmlFile.h"
-#include "BibleData/VersePerLineFile.h"
+#include "BibleData/Files/BibleDataFile.h"
 
 SDL_Window* g_window = nullptr;
 SDL_GLContext g_gl_context = nullptr;
@@ -50,7 +49,7 @@ int main()
     try
     {
         // PARSE THE BIBLE DATA.
-        std::optional<BIBLE_DATA::VersePerLineFile> verse_per_line_file = BIBLE_DATA::VersePerLineFile::Parse("data/SacredTexts/kjvdat.txt");
+        std::optional<BIBLE_DATA::FILES::BibleDataFile> verse_per_line_file = BIBLE_DATA::FILES::BibleDataFile::ParseVersePerLineFile("KJV", "data/SacredTexts/kjvdat.txt");
         if (verse_per_line_file)
         {
             std::cout << "Successful parse." << std::endl;
@@ -60,10 +59,6 @@ int main()
             std::cerr << "Failed parse." << std::endl;
             return EXIT_FAILURE;
         }
-
-        std::optional<BIBLE_DATA::OsisXmlFile> bbe_bible_file = BIBLE_DATA::OsisXmlFile::Parse("data/GratisBible/bbe.xml");
-        std::optional<BIBLE_DATA::OsisXmlFile> web_bible_file = BIBLE_DATA::OsisXmlFile::Parse("data/GratisBible/web.xml");
-        std::optional<BIBLE_DATA::OsisXmlFile> ylt_bible_file = BIBLE_DATA::OsisXmlFile::Parse("data/GratisBible/ylt.xml");
 
         // INITIALIZE SDL.
         constexpr uint32_t SDL_SUBSYSTEMS = (SDL_INIT_EVENTS | SDL_INIT_TIMER | SDL_INIT_VIDEO);

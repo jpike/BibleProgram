@@ -277,7 +277,12 @@ namespace GUI
                     [](const char character) { return static_cast<char>(std::tolower(character)); });
 
                 // SKIP STORING COLORS FOR OVERLY COMMON WORDS.
+#if __EMSCRIPTEN__
+                bool current_word_count_in_stop_words = LOWERCASE_STOP_WORDS.count(lowercase_word);
+                bool is_stop_word = (current_word_count_in_stop_words > 0);
+#else
                 bool is_stop_word = LOWERCASE_STOP_WORDS.contains(lowercase_word);
+#endif
                 if (is_stop_word)
                 {
                     continue;

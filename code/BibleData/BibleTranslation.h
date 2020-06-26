@@ -18,11 +18,10 @@ namespace BIBLE_DATA
     class BibleTranslation
     {
     public:
-        static std::shared_ptr<BibleTranslation> Populate(const std::vector<BibleVerse>& verses, const std::map<BibleBookId, BibleBook>& books);
+        static std::shared_ptr<BibleTranslation> Populate(const std::vector<BibleVerse>& verses);
         static std::shared_ptr<BibleTranslation> Create(
             const std::string& translation_name,
-            const std::vector<BibleVerse>& verses,
-            const std::map<BibleBookId, BibleBook>& books);
+            const std::vector<BibleVerse>& verses);
 
         std::vector<BibleVerse*> GetVerses(
             const BibleBookId book,
@@ -35,7 +34,6 @@ namespace BIBLE_DATA
         std::string Name = "";
         /// A mapping of Bible verses by ID.
         std::map<BibleVerseId, BibleVerse> VersesById = {};
-        std::map<BibleBookId, BibleBook> BooksById = {};
 
     private:
         std::shared_ptr<BibleWordIndex> BuildWordIndex();

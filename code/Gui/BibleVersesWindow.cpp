@@ -933,7 +933,12 @@ namespace GUI
                 }
 
                 // SKIP STORING COLORS FOR OVERLY COMMON WORDS.
+#if __EMSCRIPTEN__
+                bool current_word_count_in_stop_words = STOP_WORDS.count(token.Text);
+                bool is_stop_word = (current_word_count_in_stop_words > 0);
+#else
                 bool is_stop_word = STOP_WORDS.contains(token.Text);
+#endif
                 if (is_stop_word)
                 {
                     continue;

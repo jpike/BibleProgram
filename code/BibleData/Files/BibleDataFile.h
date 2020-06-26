@@ -24,7 +24,5 @@ namespace BIBLE_DATA::FILES
         std::string TranslationName = "";
         /// The verses parsed from the file.
         std::vector<BibleVerse> Verses = {};
-        /// Books mapped by ID.
-        std::map<BibleBookId, BibleBook> BooksById = {};
     };
 }
