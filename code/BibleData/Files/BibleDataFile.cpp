@@ -10,23 +10,20 @@ namespace BIBLE_DATA::FILES
     /// This specific format is based on the KJV data from http://sacred-texts.com/bib/osrc/index.htm.
     /// @param[in]  translation_name - The name of the translation being parsed.
     /// @param[in]  filepath - The path to the file to parse.
-    /// @return The parsed verse-per-line file, if successful; std::nullopt otherwise.
-    std::optional<BibleDataFile> BibleDataFile::ParseVersePerLineFile(const std::string& translation_name, const std::filesystem::path& filepath)
+    /// @return The translation parsed from the file, if successful; null otherwise.
+    std::shared_ptr<BibleTranslation> BibleDataFile::ParseVersePerLineFile(const std::string& translation_name, const std::filesystem::path& filepath)
     {
         // MAKE SURE THE FILE CAN BE OPENED.
         std::ifstream verse_per_line_file(filepath);
         if (!verse_per_line_file.is_open())
         {
             // INDICATE THAT THE FILE FAILED TO BE PARSED.
-            return std::nullopt;
+            return nullptr;
         }
 
         // PARSE EACH LINE FROM THE FILE.
-        BibleDataFile parsed_bible
-        {
-            .TranslationName = translation_name
-        };
-        std::vector<BibleVerse> verses;
+        std::shared_ptr<BibleTranslation> parsed_bible = std::make_shared<BibleTranslation>();
+        parsed_bible->Name = translation_name;
 
         std::string line;
         while (std::getline(verse_per_line_file, line))
@@ -65,7 +62,7 @@ namespace BIBLE_DATA::FILES
             /// \todo verse.Tokens = BibleVerse::Tokenize(verse.Text);
 
             // STORE THE PARSED VERSE.
-            parsed_bible.Verses.push_back(verse);
+            parsed_bible->VersesById[verse.Id] = verse;
         }
 
         // RETURN THE PARSED FILE.
@@ -76,23 +73,21 @@ namespace BIBLE_DATA::FILES
     /// An OSIS XML file is an XML file that contains Bible verses according the OSIS format: https://www.crosswire.org/osis/.
     /// @param[in]  translation_name - The name of the translation being parsed.
     /// @param[in]  filepath - The path to the file to parse.
-    /// @return The parsed verse-per-line file, if successful; std::nullopt otherwise.
-    std::optional<BibleDataFile> BibleDataFile::ParseOsisXmlFile(const std::string& translation_name, const std::filesystem::path& filepath)
+    /// @return The translation parsed from the file, if successful; null otherwise.
+    std::shared_ptr<BibleTranslation> BibleDataFile::ParseOsisXmlFile(const std::string& translation_name, const std::filesystem::path& filepath)
     {
         // PARSE THE XML FILE.
         pugi::xml_document osis_xml_document;
         pugi::xml_parse_result parse_result = osis_xml_document.load_file(filepath.c_str());
         if (!parse_result)
         {
-            return std::nullopt;
+            return nullptr;
         }
 
         // PARSE VERSES FROM EACH BOOK IN THE FILE.
-        BibleDataFile parsed_bible
-        {
-            .TranslationName = translation_name
-        };
-        std::vector<BibleVerse> verses;
+        std::shared_ptr<BibleTranslation> parsed_bible = std::make_shared<BibleTranslation>();
+        parsed_bible->Name = translation_name;
+
         pugi::xml_node osis_text_xml_node = osis_xml_document.select_node("/osis/osisText").node();
         // An assumption is being made that all direct child divs are for books, which is consistent with all files thus far.
         auto book_xml_nodes = osis_text_xml_node.children("div");
@@ -157,7 +152,7 @@ namespace BIBLE_DATA::FILES
                         .Text = verse_text,
                         /// \todo .Tokens = verse_tokens
                     };
-                    parsed_bible.Verses.push_back(verse);
+                    parsed_bible->VersesById[verse.Id] = verse;
                 }
             }
         }

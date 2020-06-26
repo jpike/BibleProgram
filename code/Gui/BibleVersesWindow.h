@@ -4,6 +4,7 @@
 #include <ThirdParty/imgui/imgui.h>
 #include "BibleData/BibleVerse.h"
 #include "BibleData/BibleVerseId.h"
+#include "BibleData/BibleVerseRange.h"
 
 namespace GUI
 {
@@ -13,12 +14,12 @@ namespace GUI
     public:
         void UpdateAndRender(const std::map<std::string, ImVec4>& colors_by_word);
 
+        void SetVerses(const BIBLE_DATA::BibleVerseRange& verse_range, const std::vector<BIBLE_DATA::BibleVerse>& verses);
+
         /// True if the window is open; false otherwise.
         bool Open = false;
-        /// The ID of the first verse displayed in the window.
-        BIBLE_DATA::BibleVerseId StartingVerseId = {};
-        /// The ID of the last verse displayed in the window.
-        BIBLE_DATA::BibleVerseId EndingVerseId = {};
+        /// The range of verses displayed in the window.
+        BIBLE_DATA::BibleVerseRange VerseRange = {};
         /// The verses to be rendered in the window.
         std::vector<BIBLE_DATA::BibleVerse> Verses = {};
 

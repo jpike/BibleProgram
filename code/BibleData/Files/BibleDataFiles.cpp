@@ -9,17 +9,17 @@ namespace BIBLE_DATA::FILES
         // START PARSING ALL OF THE DATA FILES.
         // They're parsed in separate threads to speed up loading.
         /// \todo   Re-evaluate this to see if it's actually needed.
-        std::future<std::optional<BibleDataFile>> kjv_bible_loading = std::async(std::launch::async, [] { return BibleDataFile::ParseVersePerLineFile("KJV", "data/SacredTexts/kjvdat.txt"); });
-#if 0
-        std::future<std::optional<BibleDataFile>> bbe_bible_loading = std::async(std::launch::async, [] { return BibleDataFile::ParseOsisXmlFile("BBE", "data/GratisBible/bbe.xml"); });
-        std::future<std::optional<BibleDataFile>> web_bible_loading = std::async(std::launch::async, [] { return BibleDataFile::ParseOsisXmlFile("WEB", "data/GratisBible/web.xml"); });
-        std::future<std::optional<BibleDataFile>> ylt_bible_loading = std::async(std::launch::async, [] { return BibleDataFile::ParseOsisXmlFile("YLT", "data/GratisBible/ylt.xml"); });
+        std::future<std::shared_ptr<BibleTranslation>> kjv_bible_loading = std::async(std::launch::async, [] { return BibleDataFile::ParseVersePerLineFile("KJV", "data/SacredTexts/kjvdat.txt"); });
+#if 1
+        std::future<std::shared_ptr<BibleTranslation>> bbe_bible_loading = std::async(std::launch::async, [] { return BibleDataFile::ParseOsisXmlFile("BBE", "data/GratisBible/bbe.xml"); });
+        std::future<std::shared_ptr<BibleTranslation>> web_bible_loading = std::async(std::launch::async, [] { return BibleDataFile::ParseOsisXmlFile("WEB", "data/GratisBible/web.xml"); });
+        std::future<std::shared_ptr<BibleTranslation>> ylt_bible_loading = std::async(std::launch::async, [] { return BibleDataFile::ParseOsisXmlFile("YLT", "data/GratisBible/ylt.xml"); });
 #endif
 
         // STORE THE FILES BEING LOADED.
         BibleDataFiles bible_data_files;
         bible_data_files.FilesBeingLoaded.emplace_back(std::move(kjv_bible_loading));
-#if 0
+#if 1
         bible_data_files.FilesBeingLoaded.emplace_back(std::move(bbe_bible_loading));
         bible_data_files.FilesBeingLoaded.emplace_back(std::move(web_bible_loading));
         bible_data_files.FilesBeingLoaded.emplace_back(std::move(ylt_bible_loading));       
@@ -30,10 +30,10 @@ namespace BIBLE_DATA::FILES
     /// Gets the next loaded Bible data file, if one exists.
     /// Any returned file is removed from this collection.
     /// @return The next loaded Bible data file, if one exists.
-    std::optional<BibleDataFile> BibleDataFiles::GetNextLoadedFile()
+    std::shared_ptr<BibleTranslation> BibleDataFiles::GetNextLoadedFile()
     {
         // FIND THE NEXT AVAILABLE FILE.
-        std::optional<BibleDataFile> next_bible_data_file;
+        std::shared_ptr<BibleTranslation> next_bible_data_file;
         for (auto file_being_loaded = FilesBeingLoaded.begin();
             file_being_loaded != FilesBeingLoaded.end();)
         {

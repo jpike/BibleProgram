@@ -8,6 +8,7 @@
 #include "BibleData/BibleTranslation.h"
 #include "BibleData/BibleVerse.h"
 #include "BibleData/BibleVerseId.h"
+#include "BibleData/BibleVerseRange.h"
 
 namespace BIBLE_DATA
 {
@@ -22,18 +23,12 @@ namespace BIBLE_DATA
         /// An ordered map is used for automatic sorting.
         static const std::map<BibleBookId, BibleBook> BOOKS_BY_ID;
 
-        void AddTranslation(const std::shared_ptr<BibleTranslation>& translation);
-        std::vector<BibleVerse> GetVerses(const BibleVerseId& starting_verse_id, const BibleVerseId& ending_verse_id) const;
-        std::vector<BibleVerse> GetVerses(const std::string& word) const;
         std::map<std::string, std::vector<BibleVerse>> BuildWordIndex();
 
         
         /// A mapping of translation names to the content of the actual translations.
         /// An ordered, rather than unordered map, to support automatic alphabetic sorting.
         std::map<std::string, std::shared_ptr<BibleTranslation>> TranslationsByName = {};
-
-        /// Verses by word.  Populated dynamically as needed.
-        mutable std::map<std::string, std::vector<BibleVerse>> VersesByWord = {};
 
         std::map<
             char,

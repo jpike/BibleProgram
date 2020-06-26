@@ -23,10 +23,10 @@ namespace BIBLE_DATA::FILES
         BibleDataFiles& operator=(BibleDataFiles&&) = default;
 
         // FILE RETRIEVAL.
-        std::optional<BibleDataFile> GetNextLoadedFile();
+        std::shared_ptr<BibleTranslation> GetNextLoadedFile();
 
     private:
         /// Bible data files that are in the process of being loaded.
-        std::vector<std::future<std::optional<BibleDataFile>>> FilesBeingLoaded = {};
+        std::vector<std::future<std::shared_ptr<BibleTranslation>>> FilesBeingLoaded = {};
     };
 }

@@ -21,21 +21,30 @@ namespace GUI
 
         // RENDER EACH VERSE IN THE WINDOW.
         std::string window_title = (
-            BIBLE_DATA::BibleBook::FullName(StartingVerseId.Book) + " " +
-            std::to_string(StartingVerseId.ChapterNumber) + ":" +
-            std::to_string(StartingVerseId.VerseNumber));
+            BIBLE_DATA::BibleBook::FullName(VerseRange.StartingVerse.Book) + " " +
+            std::to_string(VerseRange.StartingVerse.ChapterNumber) + ":" +
+            std::to_string(VerseRange.StartingVerse.VerseNumber));
         bool multiple_verses = Verses.size() > 1;
         if (multiple_verses)
         {
             window_title += " - " +
-                BIBLE_DATA::BibleBook::FullName(EndingVerseId.Book) + " " +
-                std::to_string(EndingVerseId.ChapterNumber) + ":" +
-                std::to_string(EndingVerseId.VerseNumber);
+                BIBLE_DATA::BibleBook::FullName(VerseRange.EndingVerse.Book) + " " +
+                std::to_string(VerseRange.EndingVerse.ChapterNumber) + ":" +
+                std::to_string(VerseRange.EndingVerse.VerseNumber);
         }
         std::string window_title_and_id = window_title + "###Verses";
 
-        ImVec2 min_window_size_in_pixels = { 400.0f, 400.0f };
-        ImGui::SetNextWindowSize(min_window_size_in_pixels, ImGuiCond_FirstUseEver);
+        // Window positioning/sizing is only done upon the first use to allow preserving a user's manual changes.
+        // The window is positioned to basically be to the right of the Bible book window.
+        ImVec2 current_drawing_cursor_position = ImGui::GetCursorPos();
+        constexpr float BOOK_WINDOW_WIDTH_IN_PIXELS = 200.0f;
+        constexpr float ADDITIONAL_PADDING_IN_PIXELS = 4.0f;
+        float verses_window_default_x_position = current_drawing_cursor_position.x + BOOK_WINDOW_WIDTH_IN_PIXELS + ADDITIONAL_PADDING_IN_PIXELS;
+        ImVec2 verses_window_default_position(verses_window_default_x_position, current_drawing_cursor_position.y);
+        ImGui::SetNextWindowPos(verses_window_default_position, ImGuiCond_FirstUseEver);
+        ImGuiIO& io = ImGui::GetIO();
+        ImVec2 available_screen_space_in_pixels = io.DisplaySize - verses_window_default_position;
+        ImGui::SetNextWindowSize(available_screen_space_in_pixels, ImGuiCond_FirstUseEver);
 
         if (ImGui::Begin(window_title_and_id.c_str(), &Open, ImGuiWindowFlags_MenuBar))
         {
@@ -164,6 +173,15 @@ namespace GUI
         }
         ImGui::End();
 #endif
+    }
+
+    /// Sets the verses displayed in the window.
+    /// @param[in]  verse_range - The range of verses.
+    /// @param[in]  verses - The actual verse.
+    void BibleVersesWindow::SetVerses(const BIBLE_DATA::BibleVerseRange& verse_range, const std::vector<BIBLE_DATA::BibleVerse>& verses)
+    {
+        VerseRange = verse_range;
+        Verses = verses;
     }
 
     struct TextRenderCommand

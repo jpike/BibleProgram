@@ -1,3 +1,4 @@
+#include <cassert>
 #include <chrono>
 #include <cstdlib>
 #include <cstdint>
@@ -17,6 +18,7 @@
 #undef main
 #include "BibleData/Bible.h"
 #include "BibleData/BibleTranslation.h"
+#include "BibleData/BibleVerseRange.h"
 #include "BibleData/Files/BibleDataFiles.h"
 #include "Debugging/Timer.h"
 #include "Gui/Gui.h"
@@ -75,6 +77,91 @@ int main2()
 
     auto ylt = ylt_bible_loading.get();
     ylt_timer.reset();
+
+    return 0;
+}
+
+int main_tests()
+{
+    std::optional<BIBLE_DATA::BibleVerseRange> verse_range;
+
+    verse_range = BIBLE_DATA::BibleVerseRange::Parse("Hebrews 1");
+#define ASSERTS 1
+#if ASSERTS
+    assert(verse_range);
+    assert(verse_range->StartingVerse.Book == BIBLE_DATA::BibleBookId::HEBREWS);
+    assert(verse_range->StartingVerse.ChapterNumber == 1);
+    assert(verse_range->StartingVerse.VerseNumber == 1);
+    assert(verse_range->EndingVerse.Book == BIBLE_DATA::BibleBookId::HEBREWS);
+    assert(verse_range->EndingVerse.ChapterNumber == 1);
+    assert(verse_range->EndingVerse.VerseNumber == 14);
+#endif
+
+    verse_range = BIBLE_DATA::BibleVerseRange::Parse("Hebrews 1:2");
+#if ASSERTS
+    assert(verse_range);
+    assert(verse_range->StartingVerse.Book == BIBLE_DATA::BibleBookId::HEBREWS);
+    assert(verse_range->StartingVerse.ChapterNumber == 1);
+    assert(verse_range->StartingVerse.VerseNumber == 2);
+    assert(verse_range->EndingVerse.Book == BIBLE_DATA::BibleBookId::HEBREWS);
+    assert(verse_range->EndingVerse.ChapterNumber == 1);
+    assert(verse_range->EndingVerse.VerseNumber == 2);
+#endif
+
+    verse_range = BIBLE_DATA::BibleVerseRange::Parse("Hebrews 1-2");
+#if ASSERTS
+    assert(verse_range);
+    assert(verse_range->StartingVerse.Book == BIBLE_DATA::BibleBookId::HEBREWS);
+    assert(verse_range->StartingVerse.ChapterNumber == 1);
+    assert(verse_range->StartingVerse.VerseNumber == 1);
+    assert(verse_range->EndingVerse.Book == BIBLE_DATA::BibleBookId::HEBREWS);
+    assert(verse_range->EndingVerse.ChapterNumber == 2);
+    assert(verse_range->EndingVerse.VerseNumber == 18);
+#endif
+
+    verse_range = BIBLE_DATA::BibleVerseRange::Parse("Hebrews 1:2-Hebrews 1:6");
+#if ASSERTS
+    assert(verse_range);
+    assert(verse_range->StartingVerse.Book == BIBLE_DATA::BibleBookId::HEBREWS);
+    assert(verse_range->StartingVerse.ChapterNumber == 1);
+    assert(verse_range->StartingVerse.VerseNumber == 2);
+    assert(verse_range->EndingVerse.Book == BIBLE_DATA::BibleBookId::HEBREWS);
+    assert(verse_range->EndingVerse.ChapterNumber == 1);
+    assert(verse_range->EndingVerse.VerseNumber == 6);
+#endif
+
+    verse_range = BIBLE_DATA::BibleVerseRange::Parse("Hebrews 1:2 - Hebrews 2:6");
+#if ASSERTS
+    assert(verse_range);
+    assert(verse_range->StartingVerse.Book == BIBLE_DATA::BibleBookId::HEBREWS);
+    assert(verse_range->StartingVerse.ChapterNumber == 1);
+    assert(verse_range->StartingVerse.VerseNumber == 2);
+    assert(verse_range->EndingVerse.Book == BIBLE_DATA::BibleBookId::HEBREWS);
+    assert(verse_range->EndingVerse.ChapterNumber == 2);
+    assert(verse_range->EndingVerse.VerseNumber == 6);
+#endif
+
+    verse_range = BIBLE_DATA::BibleVerseRange::Parse("1 Samuel 10");
+#if ASSERTS
+    assert(verse_range);
+    assert(verse_range->StartingVerse.Book == BIBLE_DATA::BibleBookId::FIRST_SAMUEL);
+    assert(verse_range->StartingVerse.ChapterNumber == 10);
+    assert(verse_range->StartingVerse.VerseNumber == 1);
+    assert(verse_range->EndingVerse.Book == BIBLE_DATA::BibleBookId::FIRST_SAMUEL);
+    assert(verse_range->EndingVerse.ChapterNumber == 10);
+    assert(verse_range->EndingVerse.VerseNumber == 27);
+#endif
+
+    verse_range = BIBLE_DATA::BibleVerseRange::Parse("1 Samuel 1:2 - 1 Samuel 2:3");
+#if ASSERTS
+    assert(verse_range);
+    assert(verse_range->StartingVerse.Book == BIBLE_DATA::BibleBookId::FIRST_SAMUEL);
+    assert(verse_range->StartingVerse.ChapterNumber == 1);
+    assert(verse_range->StartingVerse.VerseNumber == 2);
+    assert(verse_range->EndingVerse.Book == BIBLE_DATA::BibleBookId::FIRST_SAMUEL);
+    assert(verse_range->EndingVerse.ChapterNumber == 2);
+    assert(verse_range->EndingVerse.VerseNumber == 3);
+#endif
 
     return 0;
 }
@@ -159,8 +246,6 @@ int main()
 #endif       
 
         // UPDATING.
-        bool show_demo_window = true;
-
         uint32_t elapsed_time_in_ms_until_previous_frame = SDL_GetTicks();
         bool quit = false;
         while (!quit)
@@ -177,27 +262,16 @@ int main()
             }
 
             // UPDATE THE BIBLE DATA IF NEW DATA HAS BEEN LOADED.
-            std::optional<BIBLE_DATA::FILES::BibleDataFile> next_bible_data_file = bible_data_files.GetNextLoadedFile();
+            std::shared_ptr<BIBLE_DATA::BibleTranslation> next_bible_data_file = bible_data_files.GetNextLoadedFile();
             if (next_bible_data_file)
             {
-                // Note: slightly faster to create translation here in main thread rather than in separate threads.
-                auto translation_start_time = std::chrono::system_clock::now();
-                auto new_bible_translation = BIBLE_DATA::BibleTranslation::Create(
-                    next_bible_data_file->TranslationName,
-                    next_bible_data_file->Verses);
-                bible.AddTranslation(new_bible_translation);
-                auto translation_end_time = std::chrono::system_clock::now();
-                auto translation_time_diff = translation_end_time - translation_start_time;
-                std::cout << "Translation bible data files load time: " << translation_time_diff.count() << std::endl;
-                std::cout << "Translation bible data files load time (ms): " << std::chrono::duration_cast<std::chrono::milliseconds>(translation_time_diff).count() << std::endl;
-                std::cout << "Translation bible data files load time (s): " << std::chrono::duration_cast<std::chrono::seconds>(translation_time_diff).count() << std::endl;
+                bible.TranslationsByName[next_bible_data_file->Name] = next_bible_data_file;
             }
 
             // DRAWING.
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplSDL2_NewFrame(window);
             ImGui::NewFrame();
-            ImGui::ShowDemoWindow(&show_demo_window);
 
             gui.UpdateAndRender(bible);
 

@@ -1,6 +1,8 @@
 #pragma once
 
+#include <optional>
 #include "BibleData/Bible.h"
+#include "BibleData/BibleVerseRange.h"
 
 namespace GUI
 {
@@ -9,9 +11,10 @@ namespace GUI
     class BibleBookWindow
     {
     public:
-        const BIBLE_DATA::BibleChapter* UpdateAndRender(const BIBLE_DATA::Bible& bible);
+        std::optional<BIBLE_DATA::BibleVerseRange> UpdateAndRender();
 
         /// True if the window is open; false otherwise.
-        bool Open = false;
+        /// Defaults to true to give easy access to this window.
+        bool Open = true;
     };
 }

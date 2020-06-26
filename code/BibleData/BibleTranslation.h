@@ -10,6 +10,7 @@
 #include "BibleData/BibleBookId.h"
 #include "BibleData/BibleVerse.h"
 #include "BibleData/BibleVerseId.h"
+#include "BibleData/BibleVerseRange.h"
 #include "BibleData/BibleWordIndex.h"
 
 namespace BIBLE_DATA
@@ -18,16 +19,7 @@ namespace BIBLE_DATA
     class BibleTranslation
     {
     public:
-        static std::shared_ptr<BibleTranslation> Populate(const std::vector<BibleVerse>& verses);
-        static std::shared_ptr<BibleTranslation> Create(
-            const std::string& translation_name,
-            const std::vector<BibleVerse>& verses);
-
-        std::vector<BibleVerse*> GetVerses(
-            const BibleBookId book,
-            const unsigned int chapter_number,
-            const unsigned int starting_verse_number,
-            const unsigned int ending_verse_number);
+        std::vector<BibleVerse> GetVerses(const BibleVerseRange& verse_range) const;
 
         std::shared_ptr<BibleWordIndex> GetWordIndex();
 
