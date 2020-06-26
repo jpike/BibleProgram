@@ -11,7 +11,7 @@ namespace GUI
 {
     /// Updates and renders a single frame of the window, if it's open.
     /// @param[in]  colors_by_word - Colors for words.
-    void BibleVersesWindow::UpdateAndRender(const std::map<std::string, ImVec4>& colors_by_word)
+    void BibleVersesWindow::UpdateAndRender(std::map<std::string, ImVec4>& colors_by_word)
     {
         // DON'T RENDER ANYTHING IF THE WINDOW ISN'T OPEN.
         if (!Open)
@@ -53,14 +53,87 @@ namespace GUI
             {
                 if (ImGui::Button("Colorize"))
                 {
-                    UpdateColorLookup();
+                    UpdateColorLookup(colors_by_word);
+                }
+                if (ImGui::Button("Edit Colors"))
+                {
+                    DisplayingColors = !DisplayingColors;
+                }
+                if (ImGui::Button("Word Counts"))
+                {
+                    DisplayingWordCounts = !DisplayingWordCounts;
+
+                    if (DisplayingWordCounts && WordsByDecreasingCount.empty())
+                    {
+                        ComputeWordStatistics();
+                    }
                 }
 
                 ImGui::EndMenuBar();
             }
 
-            //ImGui::Columns(3);
+            unsigned int column_count = 1;
+            if (DisplayingColors)
+            {
+                column_count += 1;
+            }
+            if (DisplayingWordCounts)
+            {
+                column_count += 1;
+            }
+
+            ImGui::Columns(column_count);
+
             UpdateAndRenderVerseContent(Verses, colors_by_word);
+
+            if (DisplayingColors)
+            {
+                ImGui::NextColumn();
+
+                if (ImGui::BeginChild("###WordColors"))
+                {
+                    for (auto& word_and_color : colors_by_word)
+                    {
+                        float color_components[3] =
+                        {
+                            word_and_color.second.x,
+                            word_and_color.second.y,
+                            word_and_color.second.z,
+                        };
+
+                        ImGui::ColorEdit3(
+                            word_and_color.first.c_str(),
+                            color_components,
+                            ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
+
+                        word_and_color.second.x = color_components[0];
+                        word_and_color.second.y = color_components[1];
+                        word_and_color.second.z = color_components[2];
+
+                        ImGui::SameLine();
+                        ImGui::Text(word_and_color.first.c_str());
+                    }
+                }
+                ImGui::EndChild();
+            }
+
+            if (DisplayingWordCounts)
+            {
+                ImGui::NextColumn();
+
+                if (ImGui::BeginChild("###WordStatistics"))
+                {
+                    for (const auto& word_and_count : WordsByDecreasingCount)
+                    {
+                        std::size_t verse_count = word_and_count.second;
+                        std::string text = word_and_count.first + " = " + std::to_string(verse_count);
+                        ImGui::Text(text.c_str());
+                    }
+                }
+                ImGui::EndChild();
+            }
+
+            ImGui::Columns();
 #if 0
             ImGui::NextColumn();
             ImGui::Text("2nd column");
@@ -182,6 +255,12 @@ namespace GUI
     {
         VerseRange = verse_range;
         Verses = verses;
+
+        WordsByDecreasingCount.clear();
+        if (DisplayingWordCounts)
+        {
+            ComputeWordStatistics();
+        }
     }
 
     struct TextRenderCommand
@@ -927,18 +1006,41 @@ namespace GUI
     }
 
     /// Updates the lookup of colors for the current set of verses.
-    void BibleVersesWindow::UpdateColorLookup()
+    /// @param[in]  colors_by_word - The color lookup to update.
+    void BibleVersesWindow::UpdateColorLookup(std::map<std::string, ImVec4>& colors_by_word)
     {
-        const std::unordered_set<std::string> STOP_WORDS =
+        // KJV occurrence counts are in comments beside each word.
+        static const std::unordered_set<std::string> LOWERCASE_STOP_WORDS =
         {
-            "a",
-            "the"
+            "a", // 8177
+            "an",
+            "and", // 51696
+            "be", // 7013
+            "for", // 8971
+            "he", // 10420
+            "him", // 6659
+            "his", // 8473
+            "i", // 8854
+            "in", // 12667
+            "is", // 6989
+            "it", // 6129
+            "not", // 6596
+            "of", // 34617
+            "that", // 12912
+            "the", // 63924
+            "them", // 6430
+            "they", // 7376
+            "to", // 13562
+            "was",
+            "which", // 4413
+            "with", // 6012
         };
 
         // UPDATE COLORS FOR ANY UNCOLORED WORDS.
+        /// @todo   Better centralize this code!
         std::random_device random_number_generator;
         ImVec4 color = ImVec4{ 0.0f, 0.0f, 0.0f, 1.0f };
-        for (const BIBLE_DATA::BibleVerse& verse : Verses)
+        for (const auto& verse : Verses)
         {
             const std::vector<BIBLE_DATA::Token>* verse_tokens = verse.GetTokens();
             for (const auto& token : *verse_tokens)
@@ -950,12 +1052,19 @@ namespace GUI
                     continue;
                 }
 
+                std::string lowercase_word = token.Text;
+                std::transform(
+                    lowercase_word.begin(),
+                    lowercase_word.end(),
+                    lowercase_word.begin(),
+                    [](const char character) { return static_cast<char>(std::tolower(character)); });
+
                 // SKIP STORING COLORS FOR OVERLY COMMON WORDS.
 #if __EMSCRIPTEN__
-                bool current_word_count_in_stop_words = STOP_WORDS.count(token.Text);
+                bool current_word_count_in_stop_words = LOWERCASE_STOP_WORDS.count(lowercase_word);
                 bool is_stop_word = (current_word_count_in_stop_words > 0);
 #else
-                bool is_stop_word = STOP_WORDS.contains(token.Text);
+                bool is_stop_word = LOWERCASE_STOP_WORDS.contains(lowercase_word);
 #endif
                 if (is_stop_word)
                 {
@@ -965,9 +1074,8 @@ namespace GUI
                 // UPDATE THE CURRENT WORDS COLOR.
                 /// @todo   How to preserve colors while not re-using colors?
                 /// @todo   Upper/lowercase?
-#if 0
-                auto current_word_color = ColorsByWord.find(token.Text);
-                bool current_word_color_exists = (ColorsByWord.cend() != current_word_color);
+                auto current_word_color = colors_by_word.find(lowercase_word);
+                bool current_word_color_exists = (colors_by_word.cend() != current_word_color);
                 if (!current_word_color_exists)
                 {
                     // ASSIGN SOME RANDOM COLORS.
@@ -975,9 +1083,8 @@ namespace GUI
                     color.y = static_cast<float>(random_number_generator()) / static_cast<float>(random_number_generator.max());
                     color.z = static_cast<float>(random_number_generator()) / static_cast<float>(random_number_generator.max());
 
-                    ColorsByWord[token.Text] = color;
+                    colors_by_word[lowercase_word] = color;
                 }
-#endif
             }
         }
     }
@@ -985,8 +1092,9 @@ namespace GUI
     /// Computes statistics about the words currently displayed in the window.
     void BibleVersesWindow::ComputeWordStatistics()
     {
-        OccurrenceCountsByWord.clear();
+        WordsByDecreasingCount.clear();
 
+        std::map<std::string, unsigned int> occurrence_counts_by_word;
         for (const BIBLE_DATA::BibleVerse& verse : Verses)
         {
             const std::vector<BIBLE_DATA::Token>* verse_tokens = verse.GetTokens();
@@ -1000,8 +1108,22 @@ namespace GUI
                 }
 
                 // COUNT THE WORD.
-                ++OccurrenceCountsByWord[token.Text];
+                ++occurrence_counts_by_word[token.Text];
             }
         }
+
+        for (const auto& word_and_count : occurrence_counts_by_word)
+        {
+            WordsByDecreasingCount.emplace_back(
+                std::make_pair(word_and_count.first, word_and_count.second)
+            );
+        }
+        std::sort(
+            WordsByDecreasingCount.begin(),
+            WordsByDecreasingCount.end(),
+            [](const WordAndCount& left, const WordAndCount& right) -> bool
+            {
+                return left.second > right.second;
+            });
     }
 }

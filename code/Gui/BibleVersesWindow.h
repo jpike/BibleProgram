@@ -12,7 +12,7 @@ namespace GUI
     class BibleVersesWindow
     {
     public:
-        void UpdateAndRender(const std::map<std::string, ImVec4>& colors_by_word);
+        void UpdateAndRender(std::map<std::string, ImVec4>& colors_by_word);
 
         void SetVerses(const BIBLE_DATA::BibleVerseRange& verse_range, const std::vector<BIBLE_DATA::BibleVerse>& verses);
 
@@ -26,12 +26,17 @@ namespace GUI
     private:
         void UpdateAndRenderVerseContent(const std::vector<BIBLE_DATA::BibleVerse>& verses, const std::map<std::string, ImVec4>& colors_by_word);
         void Render(const BIBLE_DATA::BibleVerse& verse);
-        void UpdateColorLookup();
+        void UpdateColorLookup(std::map<std::string, ImVec4>& colors_by_word);
         void ComputeWordStatistics();
 
         /// The word currently being hovered over by the user.
         std::string CurrentlyHighlightedWord = "";
+        
+        using WordAndCount = std::pair<std::string, unsigned int>;
         /// Counts for the number of times each word appears in the current window.
-        std::map<std::string, unsigned int> OccurrenceCountsByWord = {};
+        std::vector<WordAndCount> WordsByDecreasingCount = {};
+
+        bool DisplayingColors = false;
+        bool DisplayingWordCounts = false;
     };
 }
