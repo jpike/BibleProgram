@@ -28,6 +28,7 @@
 #include "Gui/Debugging/GuiMetricsWindow.cpp"
 #include "Gui/Debugging/StyleEditorWindow.cpp"
 #include "Gui/Gui.cpp"
+#include "Gui/UserSettings.cpp"
 #include "Gui/WordColorsWindow.cpp"
 #include "Gui/WordStatisticsWindow.cpp"
 

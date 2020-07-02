@@ -1,10 +1,13 @@
 #pragma once
 
+#include <memory>
 #include <vector>
 #include <ThirdParty/imgui/imgui.h>
+#include "BibleData/Bible.h"
 #include "BibleData/BibleVerse.h"
 #include "BibleData/BibleVerseId.h"
 #include "BibleData/BibleVerseRange.h"
+#include "Gui/UserSettings.h"
 
 namespace GUI
 {
@@ -12,16 +15,18 @@ namespace GUI
     class BibleVersesWindow
     {
     public:
-        void UpdateAndRender(std::map<std::string, ImVec4>& colors_by_word);
+        void UpdateAndRender(UserSettings& user_settings);
 
-        void SetVerses(const BIBLE_DATA::BibleVerseRange& verse_range, const std::vector<BIBLE_DATA::BibleVerse>& verses);
+        void SetVerses(const BIBLE_DATA::BibleVerseRange& verse_range);
 
         /// True if the window is open; false otherwise.
         bool Open = false;
+        /// The Bible from which to display verses.
+        std::shared_ptr<BIBLE_DATA::Bible> Bible = nullptr;
         /// The range of verses displayed in the window.
         BIBLE_DATA::BibleVerseRange VerseRange = {};
-        /// The verses to be rendered in the window.
-        std::vector<BIBLE_DATA::BibleVerse> Verses = {};
+        /// The verses to be rendered in the window by translation name.
+        std::map<std::string, std::vector<BIBLE_DATA::BibleVerse>> VersesByTranslationName = {};
 
     private:
         void UpdateAndRenderVerseContent(const std::vector<BIBLE_DATA::BibleVerse>& verses, const std::map<std::string, ImVec4>& colors_by_word);

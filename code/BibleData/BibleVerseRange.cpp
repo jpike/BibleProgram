@@ -469,4 +469,24 @@ namespace BIBLE_DATA
         return verse_range;
 #endif
     }
+
+    /// Equality operator.
+    /// @param[in]  rhs - The verse range on the right-hand-side to compare against.
+    /// @return True if the verse ranges are equal; false if not.
+    bool BibleVerseRange::operator==(const BibleVerseRange& rhs) const
+    {
+        bool equal = (
+            StartingVerse == rhs.StartingVerse &&
+            EndingVerse == rhs.EndingVerse);
+        return equal;
+    }
+
+    /// Inequality operator.
+    /// @param[in]  rhs - The verse range on the right-hand-side to compare against.
+    /// @return True if the verse ranges aren't equal; false if they are equal.
+    bool BibleVerseRange::operator!=(const BibleVerseRange& rhs) const
+    {
+        bool equal = (*this == rhs);
+        return !equal;
+    }
 }

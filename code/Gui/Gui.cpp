@@ -10,16 +10,15 @@
 namespace GUI
 {
     /// Updates and renders a single frame of the GUI.
-    /// @param[in]  bible - The Bible to display in the window.
-    void Gui::UpdateAndRender(const BIBLE_DATA::Bible& bible)
+    void Gui::UpdateAndRender()
     {
         // SELECT THE FIRST TRANSLATION BY DEFAULT.
-        bool any_translation_selected = !CurrentTranslationName.empty();
+        bool any_translation_selected = !UserSettings.PrimaryBibleTranslationName.empty();
         if (!any_translation_selected)
         {
-            if (!bible.TranslationsByName.empty())
+            if (!Bible->TranslationsByName.empty())
             {
-                CurrentTranslationName = bible.TranslationsByName.begin()->first;
+                UserSettings.SetPrimaryBibleTranslation(Bible->TranslationsByName.begin()->first);
             }
         }
 
@@ -32,21 +31,18 @@ namespace GUI
             // RENDER A MENU FOR SELECTING THE CURRENT TRANSLATION.
             if (ImGui::BeginMenu("Translations"))
             {
-                for (const auto& names_and_translations : bible.TranslationsByName)
+                // DISPLAY OPTIONS FOR ALL TRANSLATIONS.
+                for (const auto& names_and_translations : Bible->TranslationsByName)
                 {
                     // ALLOW THE USED TO SELECT A TRANSLATION.
-                    bool is_selected = (names_and_translations.first == CurrentTranslationName);
+                    bool is_selected = (names_and_translations.first == UserSettings.PrimaryBibleTranslationName);
                     if (ImGui::MenuItem(names_and_translations.first.c_str(), NO_SHORTCUT_KEYS, is_selected))
                     {
-                        CurrentTranslationName = names_and_translations.first;
-
-                        if (BibleVersesWindow.Open)
-                        {
-                            std::shared_ptr<BIBLE_DATA::BibleTranslation> current_translation = bible.TranslationsByName.at(CurrentTranslationName);
-                            std::vector<BIBLE_DATA::BibleVerse> verses = current_translation->GetVerses(BibleVersesWindow.VerseRange);
-                            BibleVersesWindow.SetVerses(BibleVersesWindow.VerseRange, verses);
-                        }
+                        UserSettings.SetPrimaryBibleTranslation(names_and_translations.first);
                     }
+
+                    // MAKE SURE THE TRANSLATION'S DISPLAY STATUS IS UPDATED.
+                    UserSettings.BibleTranslationDisplayStatusesByName[names_and_translations.first] = is_selected;
                 }
 
                 ImGui::EndMenu();
@@ -56,15 +52,7 @@ namespace GUI
             if (ImGui::BeginMenu("Windows"))
             {
                 ImGui::MenuItem("Bible Books", NO_SHORTCUT_KEYS, &BibleBookWindow.Open);
-                ImGui::MenuItem("Word Statistics", NO_SHORTCUT_KEYS, &WordStatisticsWindow.Open);
-                if (ImGui::MenuItem("Word Colors", NO_SHORTCUT_KEYS, &WordColorsWindow.Open))
-                {
-                    if (ColorsByWord.empty())
-                    {
-                        UpdateColorLookup(bible);
-                    }
-                }
-
+                ImGui::MenuItem("Bible Verses", NO_SHORTCUT_KEYS, &BibleVersesWindow.Open);
                 ImGui::EndMenu();
             }
 
@@ -80,33 +68,40 @@ namespace GUI
             }
 
             // RENDER A VERSE SEARCH BAR.
-            /// @todo   Seems to return true either if enter pressed or value changed?
+            // The longest theoretical verse range would be something like
+            // 2 Thessalonians 111:111 - 2 Thessalonians 999:999
+            // which is just under 50 characters, so 64 characters should be plenty of room.
             static char verse_range_text[64];
-            ImGui::SetNextItemWidth(256.0f);
+            // The width of the text box has been chosen to be long enough for all expected text.
+            ImGui::SetNextItemWidth(512.0f);
+            // Search box is configured to only return true when enter is pressed to make it
+            // clear when the user has finished entering search text.
             bool verse_search_box_enter_pressed = ImGui::InputTextWithHint(
                 "###VerseReferenceSearch", 
-                "Enter book/chapter/verse range", 
+                "Enter verse range (ex. Genesis 1:1 - Genesis 2:3)", 
                 verse_range_text,
                 IM_ARRAYSIZE(verse_range_text),
                 ImGuiInputTextFlags_EnterReturnsTrue);
             if (verse_search_box_enter_pressed)
             {
+                // PARSE THE VERSE RANGE.
                 std::optional<BIBLE_DATA::BibleVerseRange> verse_range = BIBLE_DATA::BibleVerseRange::Parse(verse_range_text);
+
+                // DISPLAY THE VERSES IN THE RANGE IF VALID.
                 if (verse_range)
                 {
-                    if (!CurrentTranslationName.empty())
-                    {
-                        std::shared_ptr<BIBLE_DATA::BibleTranslation> current_translation = bible.TranslationsByName.at(CurrentTranslationName);
-                        std::vector<BIBLE_DATA::BibleVerse> verses = current_translation->GetVerses(*verse_range);
-                        BibleVersesWindow.SetVerses(*verse_range, verses);
-                        BibleVersesWindow.Open = true;
-                    }
+                    BibleVersesWindow.SetVerses(*verse_range);
+                    BibleVersesWindow.Open = true;
                 }
             }
 
             // RENDER A WORD SEARCH BAR.
+            // 64 characters should be long enough to search for any individual word.
             static char word_search_text[64];
+            // The width of the text box has been chosen to be long enough for all expected text.
             ImGui::SetNextItemWidth(256.0f);
+            // Search box is configured to only return true when enter is pressed to make it
+            // clear when the user has finished entering search text.
             bool word_search_box_enter_pressed = ImGui::InputTextWithHint(
                 "Search##WordSearch",
                 "Enter word",
@@ -133,169 +128,16 @@ namespace GUI
         std::optional<BIBLE_DATA::BibleVerseRange> selected_verse_range = BibleBookWindow.UpdateAndRender();
         if (selected_verse_range)
         {
-            if (!CurrentTranslationName.empty())
-            {
-                std::shared_ptr<BIBLE_DATA::BibleTranslation> current_translation = bible.TranslationsByName.at(CurrentTranslationName);
-                std::vector<BIBLE_DATA::BibleVerse> verses = current_translation->GetVerses(*selected_verse_range);
-                BibleVersesWindow.SetVerses(*selected_verse_range, verses);
-                BibleVersesWindow.Open = true;
-            }
+            // DISPLAY THE VERSES FOR THE SELECTED VERSE RANGE.
+            BibleVersesWindow.SetVerses(*selected_verse_range);
+            BibleVersesWindow.Open = true;
         }
 
-        BibleVersesWindow.UpdateAndRender(ColorsByWord);
-
-        WordColorsWindow.UpdateAndRender(ColorsByWord);
-
-        if (!CurrentTranslationName.empty())
-        {
-            std::shared_ptr<BIBLE_DATA::BibleTranslation> current_translation = bible.TranslationsByName.at(CurrentTranslationName);
-
-            std::shared_ptr<BIBLE_DATA::BibleWordIndex> word_index = current_translation->GetWordIndex();
-            if (word_index)
-            {
-                WordStatisticsWindow.UpdateAndRender(word_index->OccurrenceCountsByLowercaseWord);
-            }
-        }
-
-#if 0
-        /// @todo
-        if (ImGui::Begin("Indexed Words"))
-        {
-            using WordAndVerseIds = std::pair<std::string, std::vector<BIBLE_DATA::BibleVerseId>>;
-            std::vector<WordAndVerseIds> words_and_bible_verse_ids_by_decreasing_count;
-            for (const auto& letter_and_words : bible.BibleVersesByFirstLowercaseLetterThenImportantWord)
-            {                
-                for (const auto& word_and_bible_verse_ids : letter_and_words.second)
-                {
-                    words_and_bible_verse_ids_by_decreasing_count.emplace_back(
-                        std::make_pair(word_and_bible_verse_ids.first, word_and_bible_verse_ids.second)
-                    );
-                }
-            }
-
-            std::sort(
-                words_and_bible_verse_ids_by_decreasing_count.begin(),
-                words_and_bible_verse_ids_by_decreasing_count.end(),
-                [](const WordAndVerseIds& left, const WordAndVerseIds& right) -> bool
-                {
-                    return left.second.size() > right.second.size();
-                });
-
-            for (const auto& word_and_bible_verse_ids : words_and_bible_verse_ids_by_decreasing_count)
-            {
-                std::size_t verse_count = word_and_bible_verse_ids.second.size();
-                std::string text = word_and_bible_verse_ids.first + " = " + std::to_string(verse_count);
-                ImGui::Text(text.c_str());
-            }
-#if 0
-            for (const auto& letter_and_words : bible.BibleVersesByFirstLowercaseLetterThenImportantWord)
-            {
-                for (const auto& word_and_bible_verse_ids : letter_and_words.second)
-                {
-                    //bible.TranslationsByName.at("KJV").VersesById[word_and_bible_verse_ids.second];
-                    std::size_t verse_count = word_and_bible_verse_ids.second.size();
-                    std::string text = word_and_bible_verse_ids.first + " = " + std::to_string(verse_count);
-                    ImGui::Text(text.c_str());
-                }
-            }
-#endif
-        }
-        ImGui::End();
-#endif
+        BibleVersesWindow.UpdateAndRender(UserSettings);
 
         MetricsWindow.UpdateAndRender();
         StyleEditorWindow.UpdateAndRender();
         DemoWindow.UpdateAndRender();
         AboutWindow.UpdateAndRender();
-    }
-
-    /// Updates the lookup of colors.
-    void Gui::UpdateColorLookup(const BIBLE_DATA::Bible& bible)
-    {
-        // KJV occurrence counts are in comments beside each word.
-        static const std::unordered_set<std::string> LOWERCASE_STOP_WORDS =
-        {
-            "a", // 8177
-            "an",
-            "and", // 51696
-            "be", // 7013
-            "for", // 8971
-            "he", // 10420
-            "him", // 6659
-            "his", // 8473
-            "i", // 8854
-            "in", // 12667
-            "is", // 6989
-            "it", // 6129
-            "not", // 6596
-            "of", // 34617
-            "that", // 12912
-            "the", // 63924
-            "them", // 6430
-            "they", // 7376
-            "to", // 13562
-            "was",
-            "which", // 4413
-            "with", // 6012
-        };
-
-        if (CurrentTranslationName.empty())
-        {
-            return;
-        }
-
-        std::shared_ptr<BIBLE_DATA::BibleTranslation> current_translation = bible.TranslationsByName.at(CurrentTranslationName);
-
-
-        // UPDATE COLORS FOR ANY UNCOLORED WORDS.
-        std::random_device random_number_generator;
-        ImVec4 color = ImVec4{ 0.0f, 0.0f, 0.0f, 1.0f };
-        for (const auto& id_and_verse : current_translation->VersesById)
-        {
-            const std::vector<BIBLE_DATA::Token>* verse_tokens = id_and_verse.second.GetTokens();
-            for (const auto& token : *verse_tokens)
-            {
-                // SKIP NON-WORD TOKENS.
-                bool is_word = (BIBLE_DATA::TokenType::WORD == token.Type);
-                if (!is_word)
-                {
-                    continue;
-                }
-
-                std::string lowercase_word = token.Text;
-                std::transform(
-                    lowercase_word.begin(),
-                    lowercase_word.end(),
-                    lowercase_word.begin(),
-                    [](const char character) { return static_cast<char>(std::tolower(character)); });
-
-                // SKIP STORING COLORS FOR OVERLY COMMON WORDS.
-#if __EMSCRIPTEN__
-                bool current_word_count_in_stop_words = LOWERCASE_STOP_WORDS.count(lowercase_word);
-                bool is_stop_word = (current_word_count_in_stop_words > 0);
-#else
-                bool is_stop_word = LOWERCASE_STOP_WORDS.contains(lowercase_word);
-#endif
-                if (is_stop_word)
-                {
-                    continue;
-                }
-
-                // UPDATE THE CURRENT WORDS COLOR.
-                /// @todo   How to preserve colors while not re-using colors?
-                /// @todo   Upper/lowercase?
-                auto current_word_color = ColorsByWord.find(lowercase_word);
-                bool current_word_color_exists = (ColorsByWord.cend() != current_word_color);
-                if (!current_word_color_exists)
-                {
-                    // ASSIGN SOME RANDOM COLORS.
-                    color.x = static_cast<float>(random_number_generator()) / static_cast<float>(random_number_generator.max());
-                    color.y = static_cast<float>(random_number_generator()) / static_cast<float>(random_number_generator.max());
-                    color.z = static_cast<float>(random_number_generator()) / static_cast<float>(random_number_generator.max());
-
-                    ColorsByWord[lowercase_word] = color;
-                }
-            }
-        }
     }
 }

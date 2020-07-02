@@ -233,7 +233,7 @@ int main()
         ImGui_ImplOpenGL3_Init(GLSL_VERSION);
 
 
-        BIBLE_DATA::Bible bible;
+        auto bible = std::make_shared<BIBLE_DATA::Bible>();
 
 #if 0
         GUI::Gui gui
@@ -243,6 +243,8 @@ int main()
         };
 #else
         GUI::Gui gui;
+        gui.Bible = bible;
+        gui.BibleVersesWindow.Bible = bible;
 #endif       
 
         // UPDATING.
@@ -265,7 +267,7 @@ int main()
             std::shared_ptr<BIBLE_DATA::BibleTranslation> next_bible_data_file = bible_data_files.GetNextLoadedFile();
             if (next_bible_data_file)
             {
-                bible.TranslationsByName[next_bible_data_file->Name] = next_bible_data_file;
+                bible->TranslationsByName[next_bible_data_file->Name] = next_bible_data_file;
             }
 
             // DRAWING.
@@ -273,7 +275,7 @@ int main()
             ImGui_ImplSDL2_NewFrame(window);
             ImGui::NewFrame();
 
-            gui.UpdateAndRender(bible);
+            gui.UpdateAndRender();
 
             ImGui::Render();
             ImGuiIO& io = ImGui::GetIO();

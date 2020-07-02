@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <unordered_map>
 #include <vector>
 #include "BibleData/Bible.h"
@@ -9,8 +10,7 @@
 #include "Gui/Debugging/DemoWindow.h"
 #include "Gui/Debugging/GuiMetricsWindow.h"
 #include "Gui/Debugging/StyleEditorWindow.h"
-#include "Gui/WordColorsWindow.h"
-#include "Gui/WordStatisticsWindow.h"
+#include "Gui/UserSettings.h"
 
 /// Holds code for the main graphical user interface (GUI) of the program.
 namespace GUI
@@ -20,23 +20,19 @@ namespace GUI
     class Gui
     {
     public:
-        void UpdateAndRender(const BIBLE_DATA::Bible& bible);
+        void UpdateAndRender();
 
 
-        /// The name of the currently selected translation.
-        std::string CurrentTranslationName = "";
+        /// The Bible being displayed in the GUI.
+        std::shared_ptr<BIBLE_DATA::Bible> Bible = nullptr;
 
-        /// The colors associated with each word.  Populated on-demand as needed.
-        std::map<std::string, ImVec4> ColorsByWord = {};
+        /// The user's GUI settings.
+        UserSettings UserSettings = {};
 
         /// A window for displaying and selecting Bible books.
         BibleBookWindow BibleBookWindow = {};
         /// A window for displaying Bible verses.
         BibleVersesWindow BibleVersesWindow = {};
-        /// A window for displaying colors for words.
-        WordColorsWindow WordColorsWindow = {};
-        /// A window for displaying statistics about words.
-        WordStatisticsWindow WordStatisticsWindow = {};
 
         /// A window displaying basic GUI metrics.
         DEBUGGING::GuiMetricsWindow MetricsWindow = {};
@@ -46,8 +42,5 @@ namespace GUI
         DEBUGGING::DemoWindow DemoWindow = {};
         /// A basic "about" window for the GUI.
         DEBUGGING::AboutWindow AboutWindow = {};
-
-    private:
-        void UpdateColorLookup(const BIBLE_DATA::Bible& bible);
     };
 }

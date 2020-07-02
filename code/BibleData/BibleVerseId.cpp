@@ -2,6 +2,15 @@
 
 namespace BIBLE_DATA
 {
+    bool BibleVerseId::operator==(const BibleVerseId& rhs) const
+    {
+        bool equal = (
+            Book == rhs.Book &&
+            ChapterNumber == rhs.ChapterNumber &&
+            VerseNumber == rhs.VerseNumber);
+        return equal;
+    }
+    
     bool BibleVerseId::operator<(const BibleVerseId& rhs) const
     {
         if (Book < rhs.Book) return true;
