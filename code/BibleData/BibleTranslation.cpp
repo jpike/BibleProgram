@@ -1,4 +1,3 @@
-#include <unordered_set>
 #include "BibleData/BibleTranslation.h"
 
 namespace BIBLE_DATA
@@ -19,35 +18,5 @@ namespace BIBLE_DATA
         }
 
         return verses;
-    }
-
-    std::shared_ptr<BibleWordIndex> BibleTranslation::GetWordIndex()
-    {
-        std::lock_guard<std::mutex> lock(Mutex);
-
-        if (WordIndex)
-        {
-            return WordIndex;
-        }
-
-        if (WordIndexBeingLoaded.valid())
-        {
-            WordIndex = WordIndexBeingLoaded.get();
-            return WordIndex;
-        }
-        else
-        {
-            return nullptr;
-        }
-    }
-
-    /// Builds an index for the Bible associating words with the verses containing them.
-    /// @return A lookup from words to the verses containing them.
-    std::shared_ptr<BibleWordIndex> BibleTranslation::BuildWordIndex()
-    {
-        std::lock_guard<std::mutex> lock(Mutex);
-
-        std::shared_ptr<BibleWordIndex> word_index = BibleWordIndex::Build(VersesById);
-        return word_index;
     }
 }

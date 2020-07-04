@@ -12,15 +12,23 @@ namespace GUI::DEBUGGING
             return;
         }
 
-        /// @todo   Show custom content about data sources for Bible verses!
-        if (ImGui::Begin("About"))
+        // SHOW THE MAIN ABOUT WINDOW.
+        if (ImGui::Begin("About", &Open))
         {
             ImGui::Text("KJV from http://sacred-texts.com/bib/osrc/index.htm");
             ImGui::Text("Other Translations from https://github.com/gratis-bible/bible");
+
+            if (ImGui::Button("About the GUI"))
+            {
+                GuiSubWindowOpen = true;
+            }
         }
         ImGui::End();
 
-        // SHOW THE BUILT-IN ABOUT WINDOW.
-        ImGui::ShowAboutWindow(&Open);
+        // SHOW THE BUILT-IN GUI ABOUT WINDOW.
+        if (GuiSubWindowOpen)
+        {
+            ImGui::ShowAboutWindow(&GuiSubWindowOpen);
+        }
     }
 }

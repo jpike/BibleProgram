@@ -64,8 +64,14 @@ namespace GUI
                             user_settings.BibleTranslationDisplayStatusesByName[name_and_translation.first] = !translation_displayed;
 
                             SetVerses(VerseRange);
-                            UpdateColorLookup(user_settings.ColorsByWord);
-                            ComputeWordStatistics();
+                            if (DisplayingColors)
+                            {
+                                UpdateColorLookup(user_settings.ColorsByWord);
+                            }
+                            if (DisplayingWordCounts)
+                            {
+                                ComputeWordStatistics();
+                            }
                         };
                     }
 

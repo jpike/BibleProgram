@@ -94,33 +94,6 @@ namespace GUI
                     BibleVersesWindow.Open = true;
                 }
             }
-
-            // RENDER A WORD SEARCH BAR.
-            // 64 characters should be long enough to search for any individual word.
-            static char word_search_text[64];
-            // The width of the text box has been chosen to be long enough for all expected text.
-            ImGui::SetNextItemWidth(256.0f);
-            // Search box is configured to only return true when enter is pressed to make it
-            // clear when the user has finished entering search text.
-            bool word_search_box_enter_pressed = ImGui::InputTextWithHint(
-                "Search##WordSearch",
-                "Enter word",
-                word_search_text,
-                IM_ARRAYSIZE(word_search_text),
-                ImGuiInputTextFlags_EnterReturnsTrue);
-            if (word_search_box_enter_pressed)
-            {
-#if 0
-                /// @todo   This is a bad idea in the naive way - requires about 12 GB of memory.
-                BibleVersesWindow.Verses = bible.GetVerses(word_search_text);
-                if (!BibleVersesWindow.Verses.empty())
-                {
-                    BibleVersesWindow.StartingVerseId = BibleVersesWindow.Verses.front().Id;
-                    BibleVersesWindow.EndingVerseId = BibleVersesWindow.Verses.back().Id;
-                    BibleVersesWindow.Open = true;
-                }
-#endif
-            }
         }
         ImGui::EndMainMenuBar();
         
