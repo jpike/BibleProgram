@@ -37,11 +37,11 @@ namespace GUI
         /// The word currently being hovered over by the user.
         std::string CurrentlyHighlightedWord = "";
         
+        /// True if the word panel is being displayed.
+        bool DisplayingWordPanel = false;
+
         using WordAndCount = std::pair<std::string, unsigned int>;
         /// Counts for the number of times each word appears in the current window.
         std::vector<WordAndCount> WordsByDecreasingCount = {};
-
-        bool DisplayingColors = false;
-        bool DisplayingWordCounts = false;
     };
 }

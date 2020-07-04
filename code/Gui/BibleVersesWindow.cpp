@@ -64,33 +64,17 @@ namespace GUI
                             user_settings.BibleTranslationDisplayStatusesByName[name_and_translation.first] = !translation_displayed;
 
                             SetVerses(VerseRange);
-                            if (DisplayingColors)
-                            {
-                                UpdateColorLookup(user_settings.ColorsByWord);
-                            }
-                            if (DisplayingWordCounts)
-                            {
-                                ComputeWordStatistics();
-                            }
                         };
                     }
 
                     ImGui::EndMenu();
                 }
 
-                if (ImGui::Button("Colorize"))
+                if (ImGui::Button("Words"))
                 {
-                    UpdateColorLookup(user_settings.ColorsByWord);
-                }
-                if (ImGui::Button("Edit Colors"))
-                {
-                    DisplayingColors = !DisplayingColors;
-                }
-                if (ImGui::Button("Word Counts"))
-                {
-                    DisplayingWordCounts = !DisplayingWordCounts;
+                    DisplayingWordPanel = !DisplayingWordPanel;
 
-                    if (DisplayingWordCounts && WordsByDecreasingCount.empty())
+                    if (WordsByDecreasingCount.empty())
                     {
                         ComputeWordStatistics();
                     }
@@ -99,8 +83,9 @@ namespace GUI
                 ImGui::EndMenuBar();
             }
 
+            // DETERMINE THE NUMBER OF COLUMNS TO DISPLAY IN THE WINDOW.
+            // One column is needed per displayed translation.
             unsigned int column_count = 0;
-
             for (const auto& name_and_translation : Bible->TranslationsByName)
             {
                 bool translation_displayed = user_settings.BibleTranslationDisplayStatusesByName[name_and_translation.first];
@@ -110,191 +95,135 @@ namespace GUI
                 }
             }
 
-            if (DisplayingColors)
+            // The word panel requires an additional column.
+            if (DisplayingWordPanel)
             {
                 ++column_count;
             }
-            if (DisplayingWordCounts)
+
+            // CHECK IF ANY COLUMNS EXIST.
+            // If data is still being loaded, then no columns will exist.
+            // Providing 0 columns to ImGui will cause a crash.
+            bool columns_exist = (column_count > 0);
+            if (columns_exist)
             {
-                ++column_count;
-            }
+                // SET THE COLUMNS FOR THIS WINDOW.
+                ImGui::Columns(column_count);
 
-            /// @todo   Fix this bug!
-            if (column_count <= 0) column_count = 1;
-
-            ImGui::Columns(column_count);
-
-            for (const auto& name_and_translation : Bible->TranslationsByName)
-            {
-                bool translation_displayed = user_settings.BibleTranslationDisplayStatusesByName[name_and_translation.first];
-                if (translation_displayed)
+                // RENDER A COLUMN FOR EACH VISIBLE TRANSLATION.
+                for (const auto& name_and_translation : Bible->TranslationsByName)
                 {
-                    if (ImGui::BeginChild(name_and_translation.first.c_str()))
+                    // CHECK IF THE CURRENT TRANSLATION IS DISPLAYED.
+                    bool translation_displayed = user_settings.BibleTranslationDisplayStatusesByName[name_and_translation.first];
+                    if (translation_displayed)
                     {
-                        ImGui::Text(name_and_translation.first.c_str());
-
-                        const auto& verses_for_translation = VersesByTranslationName[name_and_translation.first];
-                        UpdateAndRenderVerseContent(verses_for_translation, user_settings.ColorsByWord);
-                    }
-                    ImGui::EndChild();
-
-                    ImGui::NextColumn();
-                }
-            }
-
-            if (DisplayingColors)
-            {
-                if (ImGui::BeginChild("###WordColors"))
-                {
-                    for (auto& word_and_color : user_settings.ColorsByWord)
-                    {
-                        float color_components[3] =
+                        // RENDER A CHILD WINDOW FOR THE TRANSLATION.
+                        // This allows for independent scrolling of each column.
+                        if (ImGui::BeginChild(name_and_translation.first.c_str()))
                         {
-                            word_and_color.second.x,
-                            word_and_color.second.y,
-                            word_and_color.second.z,
-                        };
+                            // RENDER THE TRANSLATION NAME.
+                            ImGui::Text(name_and_translation.first.c_str());
 
-                        ImGui::ColorEdit3(
-                            word_and_color.first.c_str(),
-                            color_components,
-                            ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
+                            // REDNER THE VERSES FOR THE TRANSLATION.
+                            const auto& verses_for_translation = VersesByTranslationName[name_and_translation.first];
+                            UpdateAndRenderVerseContent(verses_for_translation, user_settings.ColorsByWord);
+                        }
+                        ImGui::EndChild();
 
-                        word_and_color.second.x = color_components[0];
-                        word_and_color.second.y = color_components[1];
-                        word_and_color.second.z = color_components[2];
+                        // MOVE TO THE NEXT COLUMN.
+                        ImGui::NextColumn();
+                    }
+                }
+
+                // RENDER THE WORD PANEL IF IT'S VISIBLE
+                if (DisplayingWordPanel)
+                {
+                    if (ImGui::BeginChild("###Words"))
+                    {
+                        // ADD BUTTONS FOR COLORING.
+                        if (ImGui::Button("Auto-Colorize"))
+                        {
+                            UpdateColorLookup(user_settings.ColorsByWord);
+                        }
 
                         ImGui::SameLine();
-                        ImGui::Text(word_and_color.first.c_str());
-                    }
-                }
-                ImGui::EndChild();
 
-                ImGui::NextColumn();
-            }
+                        if (ImGui::Button("Clear Colors"))
+                        {
+                            user_settings.ColorsByWord.clear();
+                        }
 
-            if (DisplayingWordCounts)
-            {
-                if (ImGui::BeginChild("###WordStatistics"))
-                {
-                    for (const auto& word_and_count : WordsByDecreasingCount)
-                    {
-                        std::size_t verse_count = word_and_count.second;
-                        std::string text = word_and_count.first + " = " + std::to_string(verse_count);
-                        ImGui::Text(text.c_str());
-                    }
-                }
-                ImGui::EndChild();
+                        for (const auto& word_and_count : WordsByDecreasingCount)
+                        {
+                            std::size_t verse_count = word_and_count.second;
+                            std::string word_and_count_text = word_and_count.first + " = " + std::to_string(verse_count);
+                            
+                            ImVec4 word_color = { 1.0f, 1.0f, 1.0f, 1.0f };
+                            bool word_already_has_color = user_settings.ColorsByWord.contains(word_and_count.first);
+                            if (word_already_has_color)
+                            {
+                                word_color = user_settings.ColorsByWord[word_and_count.first];
+                            }
+                            float color_components[3] =
+                            {
+                                word_color.x,
+                                word_color.y,
+                                word_color.z,
+                            };
 
-                ImGui::NextColumn();
-            }
+                            // No label is displayed because it results in too much space to the right of the colored square.
+                            ImGui::ColorEdit3(
+                                word_and_count_text.c_str(),
+                                color_components,
+                                ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
 
-            ImGui::Columns();
-        }
-        ImGui::End();
+                            word_color.x = color_components[0];
+                            word_color.y = color_components[1];
+                            word_color.z = color_components[2];
 
-#if 0
-        static std::vector<std::pair<unsigned int, std::string>> counts_with_words;
+                            ImGui::SameLine();
+                            ImGui::TextColored(word_color, word_and_count_text.c_str());
+                        }
 
-        /// @todo   No scrollbar is due to child frame?
-        if (ImGui::Begin(window_title_and_id.c_str(), &Open, ImGuiWindowFlags_MenuBar /*| ImGuiWindowFlags_NoScrollbar*/))
-        {
-            // RENDER A MENU BAR.
-            if (ImGui::BeginMenuBar())
-            {
-                if (ImGui::Button("Statistics"))
-                {
-                    ComputeWordStatistics();
-                    counts_with_words.clear();
-                    for (const auto& word_with_count : OccurrenceCountsByWord)
-                    {
-                        counts_with_words.emplace_back(word_with_count.second, word_with_count.first);
-                    }
-                    std::sort(counts_with_words.begin(), counts_with_words.end());
-                    std::reverse(counts_with_words.begin(), counts_with_words.end());
-                }
+#if TODO_HAVE_WAYS_TO_REORDER
+                        for (auto& word_and_color : user_settings.ColorsByWord)
+                        {
+                            float color_components[3] =
+                            {
+                                word_and_color.second.x,
+                                word_and_color.second.y,
+                                word_and_color.second.z,
+                            };
 
-                if (ImGui::Button("Colorize"))
-                {
-                    UpdateColorLookup();
-                }
+                            ImGui::ColorEdit3(
+                                word_and_color.first.c_str(),
+                                color_components,
+                                ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
 
-                ImGui::EndMenuBar();
-            }
+                            word_and_color.second.x = color_components[0];
+                            word_and_color.second.y = color_components[1];
+                            word_and_color.second.z = color_components[2];
 
-            // RENDER THE VERSES.
-            //ImGui::BeginGroup();
+                            ImGui::SameLine();
+                            ImGui::Text(word_and_color.first.c_str());
+                        }
 
-            std::string entire_verse_text;
-            for (const auto& verse : Verses)
-            {
-                auto tokens = verse.GetTokens();
-                for (const auto& token : *tokens)
-                {
-                    entire_verse_text += token.Text;
-                    if (token.Type != BIBLE_DATA::TokenType::SPACE)
-                    {
-                        entire_verse_text += " ";
-                    }
-                }
-            }
-
-            BIBLE_DATA::BibleBookId previous_book = BIBLE_DATA::BibleBookId::INVALID;
-            unsigned int previous_chapter_number = 0;
-            for (const auto& verse : Verses)
-            {
-                // PRINT SOME TEXT TO INDICATE IF A NEW BOOK IS BEING STARTED.
-                bool new_book_being_started = (previous_book != verse.Id.Book);
-                if (new_book_being_started)
-                {
-                    std::string book_name = BIBLE_DATA::BibleBook::FullName(verse.Id.Book);
-                    std::transform(
-                        book_name.begin(), 
-                        book_name.end(), 
-                        book_name.begin(), 
-                        [](const char character) { return static_cast<char>(std::toupper(character)); });
-                    ImGui::TextDisabled(book_name.c_str());
-
-                    previous_book = verse.Id.Book;
-                }
-                // PRINT SOME TEXT TO INDICATE IF A NEW CHAPTER IS BEING STARTED.
-                bool new_chapter_being_started = (previous_chapter_number != verse.Id.ChapterNumber);
-                if (new_chapter_being_started)
-                {
-                    std::string chapter_text = "CHAPTER " + std::to_string(verse.Id.ChapterNumber);
-                    ImGui::TextDisabled(chapter_text.c_str());
-
-                    previous_chapter_number = verse.Id.ChapterNumber;
-                }
-
-                bool header_info_printed = (new_book_being_started || new_chapter_being_started);
-                if (header_info_printed)
-                {
-                    ImGui::NewLine();
-                }
-
-                Render(verse);
-            }
-
-            bool any_verse_hovered = ImGui::IsAnyItemHovered();
-            if (!any_verse_hovered)
-            {
-                CurrentlyHighlightedWord.clear();
-            }
-        }
-        ImGui::End();
-
-        /// @todo   Make this a separate window!
-        if (ImGui::Begin("Word Counts"))
-        {
-            for (const auto& count_with_word : counts_with_words)
-            {
-                std::string word_statistics = count_with_word.second + ": " + std::to_string(count_with_word.first);
-                ImGui::Text(word_statistics.c_str());
-            }
-        }
-        ImGui::End();
+                        for (const auto& word_and_count : WordsByDecreasingCount)
+                        {
+                            std::size_t verse_count = word_and_count.second;
+                            std::string text = word_and_count.first + " = " + std::to_string(verse_count);
+                            ImGui::Text(text.c_str());
+                        }
 #endif
+                    }
+                    ImGui::EndChild();
+                }
+
+                // RETURN TO THE NORMAL NUMBER OF COLUMNS.
+                ImGui::Columns();
+            }
+        }
+        ImGui::End();
     }
 
     /// Sets the verses displayed in the window.
@@ -310,7 +239,7 @@ namespace GUI
         }
 
         WordsByDecreasingCount.clear();
-        if (DisplayingWordCounts)
+        if (DisplayingWordPanel)
         {
             ComputeWordStatistics();
         }
@@ -947,114 +876,6 @@ namespace GUI
                 packed_color,
                 text_render_command.Text.c_str(),
                 USE_IMPLICIT_NULL_TERMINATOR);
-        }
-    }
-
-    /// Renders a single Bible verse in the window.
-    /// @param[in]  verse - The verse to render.
-    void BibleVersesWindow::Render(const BIBLE_DATA::BibleVerse& verse)
-    {
-        //ImVec4 dark_gray_verse_number_color = { 0.5f, 0.5f, 0.5f, 1.0f };
-        std::string verse_number = std::to_string(verse.Id.VerseNumber);
-        ImGui::SameLine();
-        ImGui::TextDisabled(verse_number.c_str());
-
-        // MAIN LOGIC.
-        ImGuiWindow* window = ImGui::GetCurrentWindow();
-        ImVec4 color;
-        color.x = 1.0f;
-        color.y = 1.0f;
-        color.z = 1.0f;
-        color.w = 1.0f;
-        const std::vector<BIBLE_DATA::Token>* verse_tokens = verse.GetTokens();
-        for (std::size_t token_index = 0; token_index < verse_tokens->size(); ++token_index)
-        {
-            const auto& token = verse_tokens->at(token_index);
-            if (token.Type == BIBLE_DATA::TokenType::SPACE)
-            {
-                continue;
-            }
-
-            // GET THE CURRENT WORD'S COLOR.
-#if 0
-            auto current_word_color = ColorsByWord.find(token.Text);
-            bool current_word_color_exists = (ColorsByWord.cend() != current_word_color);
-            if (current_word_color_exists)
-            {
-                color = current_word_color->second;
-            }
-            else
-#endif
-            {
-                // White.
-                color = ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f };
-            }
-
-            ImGuiContext& gui_context = *GImGui;
-            int text_length = ImFormatString(gui_context.TempBuffer, IM_ARRAYSIZE(gui_context.TempBuffer), token.Text.c_str());
-            const char* text_begin = gui_context.TempBuffer;
-            const char* text_end = text_begin + text_length;
-
-            /// @todo   The code here is very hacky...Need to spend more time refining it.
-            ImGui::SameLine();
-            ImVec2 text_position(window->DC.CursorPos.x, window->DC.CursorPos.y + window->DC.CurrLineTextBaseOffset);
-            constexpr float WRAP_TO_END_OF_WINDOW = 0.0f;
-            float wrap_width = ImGui::CalcWrapWidthForPos(window->DC.CursorPos, WRAP_TO_END_OF_WINDOW);
-            ImVec2 text_size = ImGui::CalcTextSize(text_begin, text_end, false, wrap_width);
-            ImRect text_bounding_box(text_position, text_position + text_size);
-
-            // Accounting for the spacing between items is very important for proper wrapping.
-            float text_width = text_bounding_box.GetWidth() + gui_context.Style.ItemSpacing.x;
-            bool current_text_can_fit_on_line = (text_width < wrap_width);
-            if (!current_text_can_fit_on_line)
-            {
-                // START A NEW LINE.
-                ImGui::NewLine();
-
-                // RECALCULATE THE BOUNDING BOX FOR THE TEXT FOR THE NEW LINE.
-                text_position = ImVec2(window->DC.CursorPos.x, window->DC.CursorPos.y + window->DC.CurrLineTextBaseOffset);
-                wrap_width = ImGui::CalcWrapWidthForPos(window->DC.CursorPos, WRAP_TO_END_OF_WINDOW);
-                text_size = ImGui::CalcTextSize(text_begin, text_end, false, wrap_width);
-                text_bounding_box = ImRect(text_position, text_position + text_size);
-            }
-
-            ImGui::ItemSize(text_size);
-            ImGui::ItemAdd(text_bounding_box, 0);
-
-            // SET THE TEXT COLOR.
-            // A temporarily different (usually) highlight color is used when hovering over.
-            bool is_currently_highlighted_word = (token.Text == CurrentlyHighlightedWord) || (ImGui::IsItemHovered());
-            if (is_currently_highlighted_word)
-            {
-                /// @todo   Something other than yellow for highlights?
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.0f, 1.0f));
-
-                CurrentlyHighlightedWord = token.Text;
-            }
-            else
-            {
-                ImGui::PushStyleColor(ImGuiCol_Text, color);
-            }
-            // Render (we don't hide text after ## in this end-user function)
-            // RenderTextWrapped didn't work, so we're rendering text directly.
-            ImGui::RenderText(text_bounding_box.Min, text_begin, text_end);
-            ImGui::PopStyleColor();
-            // ADJUST THE COLOR FOR TESTING.
-            // This is just temporary and will be replaced with fixed lookups/customizable options later.
-#if RANDOM_COLORS
-            if (color.x <= color.y)
-            {
-                color.x += 0.1f;
-            }
-            else if (color.y <= color.z)
-            {
-                color.y += 0.1f;
-            }
-            else if (color.z <= color.x)
-            {
-                color.z += 0.1f;
-            }
-#endif
         }
     }
 
