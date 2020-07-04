@@ -172,14 +172,16 @@ namespace GUI
                             };
 
                             // No label is displayed because it results in too much space to the right of the colored square.
-                            ImGui::ColorEdit3(
+                            if (ImGui::ColorEdit3(
                                 word_and_count_text.c_str(),
                                 color_components,
-                                ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
-
-                            word_color.x = color_components[0];
-                            word_color.y = color_components[1];
-                            word_color.z = color_components[2];
+                                ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel))
+                            {
+                                word_color.x = color_components[0];
+                                word_color.y = color_components[1];
+                                word_color.z = color_components[2];
+                                user_settings.ColorsByWord[word_and_count.first] = word_color;
+                            }
 
                             ImGui::SameLine();
                             ImGui::TextColored(word_color, word_and_count_text.c_str());
@@ -250,7 +252,8 @@ namespace GUI
         std::string Text = "";
         ImVec4 Color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
         ImVec2 DrawPosition = ImVec2(0.0f, 0.0f);
-        //bool EndsWithNewLine = false;
+        ImVec2 TextSize = ImVec2(0.0f, 0.0f);
+        ImRect TextBoundingBox = ImRect(0.0f, 0.0f, 0.0f, 0.0f);
     };
 
     /// Updates and renders the specified verse content in the window.
@@ -308,6 +311,10 @@ namespace GUI
                     .Color = ImVec4(0.5f, 0.5f, 0.5f, 1.0f),
                     .DrawPosition = current_draw_position,
                 };
+                book_title_render_command.TextSize = ImGui::CalcTextSize(book_title_render_command.Text.c_str());
+                book_title_render_command.TextBoundingBox = ImRect(
+                    book_title_render_command.DrawPosition, 
+                    book_title_render_command.DrawPosition + text_size);
                 text_render_commands.push_back(book_title_render_command);
 
                 //current_draw_position.x += text_size.x;
@@ -339,6 +346,10 @@ namespace GUI
                     .Color = ImVec4(0.5f, 0.5f, 0.5f, 1.0f),
                     .DrawPosition = current_draw_position,
                 };
+                chapter_title_render_command.TextSize = ImGui::CalcTextSize(chapter_title_render_command.Text.c_str());
+                chapter_title_render_command.TextBoundingBox = ImRect(
+                    chapter_title_render_command.DrawPosition,
+                    chapter_title_render_command.DrawPosition + text_size);
                 text_render_commands.push_back(chapter_title_render_command);
 
                 //current_draw_position.x += text_size.x;
@@ -377,6 +388,10 @@ namespace GUI
                     .Color = ImVec4(0.5f, 0.5f, 0.5f, 1.0f),
                     .DrawPosition = current_draw_position,
                 };
+                verse_number_render_command.TextSize = ImGui::CalcTextSize(verse_number_render_command.Text.c_str());
+                verse_number_render_command.TextBoundingBox = ImRect(
+                    verse_number_render_command.DrawPosition,
+                    verse_number_render_command.DrawPosition + text_size);
                 text_render_commands.push_back(verse_number_render_command);
 
                 current_draw_position.x += text_size.x;
@@ -404,6 +419,10 @@ namespace GUI
                     .Color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
                     .DrawPosition = current_draw_position,
                 };
+                token_render_command.TextSize = ImGui::CalcTextSize(token_render_command.Text.c_str());
+                token_render_command.TextBoundingBox = ImRect(
+                    token_render_command.DrawPosition,
+                    token_render_command.DrawPosition + text_size);
                 text_render_commands.push_back(token_render_command);
 
                 current_draw_position.x += text_size.x;
@@ -458,7 +477,8 @@ namespace GUI
         {
             // INITIALIZE THE INPUT TEXT STATE.
             input_text_state = &gui_context.InputTextState;
-            int entire_text_length = static_cast<int>(final_rendered_verse_text.length());
+            // +1 is needed to be able to select last character.
+            int entire_text_length = static_cast<int>(final_rendered_verse_text.length() + 1);
 
             // TextW is used for copying, so it needs to be populated.
             constexpr int ALLOW_AT_LEAST_1_CHARACTER_FOR_EMPTY_STRING = 1;
@@ -831,11 +851,11 @@ namespace GUI
         for (const TextRenderCommand& text_render_command : text_render_commands)
         {
             // CALCULATE THE BOUNDING BOX FOR THE TEXT.
-            ImVec2 text_size = ImGui::CalcTextSize(text_render_command.Text.c_str());
-            ImRect text_bounding_box(text_render_command.DrawPosition, text_render_command.DrawPosition + text_size);
             /// @todo Adding items here messed a bit with scrolling.
-            ImGui::ItemSize(text_size);
-            ImGui::ItemAdd(text_bounding_box, 0);
+            // ItemSize adds scrolling
+#if 1
+            ImGui::ItemSize(text_render_command.TextSize);
+#endif
 
             std::string lowercase_word = text_render_command.Text;
             std::transform(
@@ -855,7 +875,11 @@ namespace GUI
 
             // SET THE TEXT COLOR.
             // A temporarily different (usually) highlight color is used when hovering over.
+#if 0
             bool mouse_over_text_bounding_box = ImGui::IsItemHovered();
+#else
+            bool mouse_over_text_bounding_box = text_render_command.TextBoundingBox.Contains(gui_context.IO.MousePos);
+#endif
             bool is_currently_highlighted_word = (lowercase_word == CurrentlyHighlightedWord) || mouse_over_text_bounding_box;
             if (is_currently_highlighted_word)
             {
@@ -883,31 +907,146 @@ namespace GUI
     /// @param[in]  colors_by_word - The color lookup to update.
     void BibleVersesWindow::UpdateColorLookup(std::map<std::string, ImVec4>& colors_by_word)
     {
-        // KJV occurrence counts are in comments beside each word.
+        // KJV occurrence counts are in comments beside some words.
         static const std::unordered_set<std::string> LOWERCASE_STOP_WORDS =
         {
             "a", // 8177
+            "about",
+            "again",
+            "against",
+            "also",
             "an",
+            "any",
             "and", // 51696
+            "are",
+            "art",
+            "as",
+            "at",
+            "base",
             "be", // 7013
+            "because",
+            "become",
+            "been",
+            "before",
+            "being",
+            "better",
+            "bring",
+            "brings",
+            "bringeth",
+            "by",
+            "but",
+            "came",
+            "come",
+            "did",
+            "didst",
+            "do",
+            "does",
+            "dost",
+            "doth",
+            "down",
+            "even",
+            "ever",
+            "express",
+            "first",
+            "fold",
+            "found",
             "for", // 8971
+            "forth",
+            "from",
+            "had",
+            "has",
+            "hast",
+            "hath",
+            "have",
+            "having",
             "he", // 10420
             "him", // 6659
+            "himself",
             "his", // 8473
             "i", // 8854
             "in", // 12667
+            "indeed",
+            "into",
             "is", // 6989
             "it", // 6129
+            "its",
+            "laid",
+            "let",
+            "like",
+            "made",
+            "make",
+            "makes",
+            "maketh",
+            "making",
+            "many",
+            "may",
+            "me",
+            "more",
+            "much",
+            "my",
+            "no",
             "not", // 6596
+            "now",
+            "o",
             "of", // 34617
+            "on",
+            "only",
+            "or",
+            "our",
+            "out",
+            "put",
+            "said",
+            "saith",
+            "same",
+            "sat",
+            "say",
+            "saying",
+            "says",
+            "seat",
+            "send",
+            "sending",
+            "sent",
+            "shalt",
+            "sit",
+            "so",
+            "t",
+            "take",
+            "than",
             "that", // 12912
             "the", // 63924
+            "thee",
+            "their",
+            "theirs",
             "them", // 6430
+            "therefore",
+            "these",
             "they", // 7376
+            "thine",
+            "things",
+            "this",
+            "those",
+            "thou",
+            "through",
+            "thy",
+            "till",
             "to", // 13562
+            "together",
+            "took",
+            "under",
+            "until",
+            "unto",
+            "up",
+            "us",
+            "very",
             "was",
+            "when",
             "which", // 4413
+            "who",
+            "whom",
+            "whose",
             "with", // 6012
+            "you",
+            "your"
         };
 
         // UPDATE COLORS FOR ANY UNCOLORED WORDS.
@@ -990,8 +1129,15 @@ namespace GUI
                         continue;
                     }
 
+                    std::string lowercase_word = token.Text;
+                    std::transform(
+                        lowercase_word.begin(),
+                        lowercase_word.end(),
+                        lowercase_word.begin(),
+                        [](const char character) { return static_cast<char>(std::tolower(character)); });
+
                     // COUNT THE WORD.
-                    ++occurrence_counts_by_word[token.Text];
+                    ++occurrence_counts_by_word[lowercase_word];
                 }
             }
         }
