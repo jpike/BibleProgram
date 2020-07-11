@@ -280,12 +280,21 @@ namespace GUI
         unsigned int previous_chapter_number = 0;
         ImVec2 current_draw_position = window->DC.CursorPos;
         bool first_verse = true;
+        bool first_chapter = true;
+        bool first_book = true;
         for (const BIBLE_DATA::BibleVerse& verse : verses)
         {
             // PRINT SOME TEXT TO INDICATE IF A NEW BOOK IS BEING STARTED.
             bool new_book_being_started = (previous_book != verse.Id.Book);
             if (new_book_being_started)
             {
+                if (!first_book)
+                {
+                    current_draw_position.y += ImGui::GetTextLineHeight();
+                    text_render_commands.back().Text += '\n';
+                }
+                current_draw_position.x = entire_text_bounding_box.GetBL().x;
+
                 std::string book_name = BIBLE_DATA::BibleBook::FullName(verse.Id.Book);
                 std::transform(
                     book_name.begin(),
@@ -294,20 +303,11 @@ namespace GUI
                     [](const char character) { return static_cast<char>(std::toupper(character)); });
 
                 ImVec2 text_size = ImGui::CalcTextSize(book_name.c_str());
-                ImVec2 text_end_position = current_draw_position + text_size;
-                bool text_fits_on_current_line = (text_end_position.x <= entire_text_bounding_box_max_coordinates.x);
-                if (!text_fits_on_current_line)
-                {
-                    current_draw_position.x = entire_text_bounding_box.GetBL().x;
-                    current_draw_position.y += ImGui::GetTextLineHeight();
-
-                    //book_name = '\n' + book_name;
-                    text_render_commands.back().Text += '\n';
-                }
 
                 TextRenderCommand book_title_render_command =
                 {
                     .Text = book_name + '\n',
+                    //.Text = book_name,
                     .Color = ImVec4(0.5f, 0.5f, 0.5f, 1.0f),
                     .DrawPosition = current_draw_position,
                 };
@@ -321,28 +321,28 @@ namespace GUI
                 current_draw_position.y += ImGui::GetTextLineHeight();
 
                 previous_book = verse.Id.Book;
+                first_book = false;
+                first_chapter = true;
             }
             // PRINT SOME TEXT TO INDICATE IF A NEW CHAPTER IS BEING STARTED.
             bool new_chapter_being_started = (previous_chapter_number != verse.Id.ChapterNumber);
             if (new_chapter_being_started)
             {
+                if (!first_chapter)
+                {
+                    current_draw_position.y += ImGui::GetTextLineHeight();
+                    text_render_commands.back().Text += '\n';
+                }
+                current_draw_position.x = entire_text_bounding_box.GetBL().x;
+
                 std::string chapter_text = "CHAPTER " + std::to_string(verse.Id.ChapterNumber);
 
                 ImVec2 text_size = ImGui::CalcTextSize(chapter_text.c_str());
-                ImVec2 text_end_position = current_draw_position + text_size;
-                bool text_fits_on_current_line = (text_end_position.x <= entire_text_bounding_box_max_coordinates.x);
-                if (!text_fits_on_current_line)
-                {
-                    current_draw_position.x = entire_text_bounding_box.GetBL().x;
-                    current_draw_position.y += ImGui::GetTextLineHeight();
-
-                    //chapter_text = '\n' + chapter_text;
-                    text_render_commands.back().Text += '\n';
-                }
 
                 TextRenderCommand chapter_title_render_command =
                 {
                     .Text = chapter_text + '\n',
+                    //.Text = chapter_text,
                     .Color = ImVec4(0.5f, 0.5f, 0.5f, 1.0f),
                     .DrawPosition = current_draw_position,
                 };
@@ -356,6 +356,8 @@ namespace GUI
                 current_draw_position.y += ImGui::GetTextLineHeight();
 
                 previous_chapter_number = verse.Id.ChapterNumber;
+                first_chapter = false;
+                first_verse = true;
             }
 
             // PRINT THE VERSE NUMBER.
@@ -380,6 +382,9 @@ namespace GUI
 
                     //verse_number = '\n' + verse_number;
                     text_render_commands.back().Text += '\n';
+
+                    // Remove any extra spaces from the beginning of the line.
+                    verse_number = std::to_string(verse.Id.VerseNumber) + ' ';
                 }
 
                 TextRenderCommand verse_number_render_command =
@@ -403,7 +408,10 @@ namespace GUI
                 std::string token_text = token.Text;
                 ImVec2 text_size = ImGui::CalcTextSize(token_text.c_str());
                 ImVec2 text_end_position = current_draw_position + text_size;
-                bool text_fits_on_current_line = (text_end_position.x <= entire_text_bounding_box_max_coordinates.x);
+                bool text_fits_on_current_line = 
+                    (text_end_position.x <= entire_text_bounding_box_max_coordinates.x) ||
+                    // Spaces don't need to start a new line.
+                    (BIBLE_DATA::TokenType::SPACE == token.Type);
                 if (!text_fits_on_current_line)
                 {
                     current_draw_position.x = entire_text_bounding_box.GetBL().x;
@@ -739,10 +747,17 @@ namespace GUI
                     input_text_state->ScrollX = 0.0f;
                     input_text_state->CursorFollow = false;
 
+                    // CALCULATE THE SIZE OF THE CURRENT TEXT ITEM.
+                    // This is needed for proper, stable scrolling.
+                    ImVec2 text_item_size = ImGui::CalcItemSize(
+                        ImVec2(),
+                        ImGui::CalcItemWidth(),
+                        (ImGui::GetTextLineHeight() * 8.0f) + gui_context.Style.FramePadding.y * 2.0f);
+
                     // UPDATE VERTICAL SCROLLING.
                     float scroll_y = window->Scroll.y;
                     bool cursor_before_window_scroll_position = cursor_offset.y - gui_context.FontSize < scroll_y;
-                    bool cursor_at_or_after_window_scroll_position = cursor_offset.y - window_content_region_size.y >= scroll_y;
+                    bool cursor_at_or_after_window_scroll_position = cursor_offset.y - text_item_size.y >= scroll_y;
                     if (cursor_before_window_scroll_position)
                     {
                         // KEEP THE CURSOR IN VIEW OF THE WINDOW'S SCROLLING.
@@ -750,7 +765,7 @@ namespace GUI
                     }
                     else if (cursor_at_or_after_window_scroll_position)
                     {
-                        scroll_y = cursor_offset.y - window_content_region_size.y;
+                        scroll_y = cursor_offset.y - text_item_size.y;
                     }
                     // UPDATE THE DRAW POSITION FOR THE CURSOR.
                     draw_position.y += (window->Scroll.y - scroll_y);
@@ -768,13 +783,6 @@ namespace GUI
                 ImVec2 rectangle_position = draw_position + select_start_offset - draw_scroll;
                 for (const ImWchar* character = text_selected_begin; character < text_selected_end;)
                 {
-                    // STOP RENDERING IF WE'VE GONE BEYONG THE MAX BOUNDS OF THE CLIP RECTANGLE.
-                    bool moved_outside_bounds_of_clip_rectangle = rectangle_position.y > clip_rectangle.w + gui_context.FontSize;
-                    if (moved_outside_bounds_of_clip_rectangle)
-                    {
-                        break;
-                    }
-
                     // CHECK IF THERE'S MORE ROOM BEFORE THE TOP OF THE CLIP RECTANGLE.
                     bool room_before_top_of_clip_rectangle = rectangle_position.y < clip_rectangle.y;
                     if (room_before_top_of_clip_rectangle)
@@ -792,7 +800,6 @@ namespace GUI
                     else
                     {
                         // RENDER A SHADED RECTANGLE FOR THE BACKGROUND.
-                        // const ImWchar* text_begin, const ImWchar* text_end, const ImWchar** remaining, ImVec2* out_offset, bool stop_on_new_line)
                         ImVec2* no_offset_output_needed = nullptr;
                         constexpr bool STOP_ON_NEW_LINES = true;
                         ImVec2 rectangle_size = InputTextCalcTextSizeW(character, text_selected_end, &character, no_offset_output_needed, STOP_ON_NEW_LINES);
@@ -808,11 +815,7 @@ namespace GUI
                         ImRect background_rectangle(
                             rectangle_position + ImVec2(0.0f, background_top_offset - gui_context.FontSize), 
                             rectangle_position + ImVec2(rectangle_size.x, background_bottom_offset));
-                        background_rectangle.ClipWith(clip_rectangle);
-                        if (background_rectangle.Overlaps(clip_rectangle))
-                        {
-                            window->DrawList->AddRectFilled(background_rectangle.Min, background_rectangle.Max, selected_text_background_color);
-                        }
+                        window->DrawList->AddRectFilled(background_rectangle.Min, background_rectangle.Max, selected_text_background_color);
                     }
 
                     // MOVE THE RECTANGLE TO THE NEXT POSITION.
@@ -832,17 +835,13 @@ namespace GUI
                 bool cursor_is_visible = (input_text_state->CursorAnim <= 0.0f) || ImFmod(input_text_state->CursorAnim, 1.20f) <= 0.80f;
                 if (cursor_is_visible)
                 {
-                    // DETERMINE IF THE CURSOR IS WITHIN THE CLIP RECTANGLE.
+                    // DRAW THE CURSOR.
                     ImVec2 cursor_screen_position = draw_position + cursor_offset - draw_scroll;
                     ImRect cursor_screen_rectangle(
                         cursor_screen_position.x,
                         /// @todo   Why does the actual ImGui code use this formula?
                         cursor_screen_position.y - gui_context.FontSize + 0.5f, cursor_screen_position.x + 1.0f, cursor_screen_position.y - 1.5f);
-                    if (cursor_screen_rectangle.Overlaps(clip_rectangle))
-                    {
-                        // DRAW THE CURSOR.
-                        window->DrawList->AddLine(cursor_screen_rectangle.Min, cursor_screen_rectangle.GetBL(), ImGui::GetColorU32(ImGuiCol_Text));
-                    }
+                    window->DrawList->AddLine(cursor_screen_rectangle.Min, cursor_screen_rectangle.GetBL(), ImGui::GetColorU32(ImGuiCol_Text));
                 }
             }
         }
