@@ -10,10 +10,14 @@
 #include <ThirdParty/imgui/imgui_impl_sdl.h>
 #include <ThirdParty/SDL/SDL.h>
 #undef main
+#include "BibleData/BibleTranslation.h"
 #include "BibleData/Files/BibleDataFile.h"
+#include "BibleData/Files/BibleDataFiles.h"
+#include "Gui/Gui.h"
 
 SDL_Window* g_window = nullptr;
 SDL_GLContext g_gl_context = nullptr;
+GUI::Gui gui;
 
 void EmscriptenMainLoopIteration()
 {
@@ -29,8 +33,7 @@ void EmscriptenMainLoopIteration()
     ImGui_ImplSDL2_NewFrame(g_window);
     ImGui::NewFrame();
 
-    static bool show_demo_window = true;
-    ImGui::ShowDemoWindow(&show_demo_window);
+    gui.UpdateAndRender();
 
     ImGui::Render();
     SDL_GL_MakeCurrent(g_window, g_gl_context);
@@ -49,16 +52,34 @@ int main()
     try
     {
         // PARSE THE BIBLE DATA.
-        std::optional<BIBLE_DATA::FILES::BibleDataFile> verse_per_line_file = BIBLE_DATA::FILES::BibleDataFile::ParseVersePerLineFile("KJV", "data/SacredTexts/kjvdat.txt");
-        if (verse_per_line_file)
+        auto bible = std::make_shared<BIBLE_DATA::Bible>();
+        std::shared_ptr<BIBLE_DATA::BibleTranslation> kjv_bible = BIBLE_DATA::FILES::BibleDataFile::ParseVersePerLineFile("KJV", "data/SacredTexts/kjvdat.txt");
+        if (kjv_bible)
         {
-            std::cout << "Successful parse." << std::endl;
+            bible->TranslationsByName[kjv_bible->Name] = kjv_bible;
         }
-        else
+
+        std::shared_ptr<BIBLE_DATA::BibleTranslation> bbe_bible = BIBLE_DATA::FILES::BibleDataFile::ParseOsisXmlFile("BBE", "data/GratisBible/bbe.xml");
+        if (bbe_bible)
         {
-            std::cerr << "Failed parse." << std::endl;
-            return EXIT_FAILURE;
+            bible->TranslationsByName[bbe_bible->Name] = bbe_bible;
         }
+
+        std::shared_ptr<BIBLE_DATA::BibleTranslation> web_bible = BIBLE_DATA::FILES::BibleDataFile::ParseOsisXmlFile("WEB", "data/GratisBible/web.xml");
+        if (web_bible)
+        {
+            bible->TranslationsByName[web_bible->Name] = web_bible;
+        }
+
+        std::shared_ptr<BIBLE_DATA::BibleTranslation> ylt_bible = BIBLE_DATA::FILES::BibleDataFile::ParseOsisXmlFile("YLT", "data/GratisBible/ylt.xml");
+        if (ylt_bible)
+        {
+            bible->TranslationsByName[ylt_bible->Name] = ylt_bible;
+        }
+        
+        // SETUP THE GUI.
+        gui.Bible = bible;
+        gui.BibleVersesWindow.Bible = bible;
 
         // INITIALIZE SDL.
         constexpr uint32_t SDL_SUBSYSTEMS = (SDL_INIT_EVENTS | SDL_INIT_TIMER | SDL_INIT_VIDEO);

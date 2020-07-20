@@ -9,6 +9,7 @@ namespace BIBLE_DATA
     {
     public:
         bool operator==(const BibleVerseId& rhs) const;
+        bool operator!=(const BibleVerseId& rhs) const;
         bool operator<(const BibleVerseId& rhs) const;
 
         /// The book containing the verse.

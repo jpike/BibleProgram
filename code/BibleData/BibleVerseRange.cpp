@@ -99,7 +99,11 @@ namespace BIBLE_DATA
                 std::string first_delimiter_and_number = verse_regex_matches[FIRST_DELIMITER_NUMBER_MATCH_INDEX];
                 if (!first_delimiter_and_number.empty())
                 {
+#if __EMSCRIPTEN__
+                    if (first_delimiter_and_number[0] == '-')
+#else
                     if (first_delimiter_and_number.starts_with('-'))
+#endif
                     {
                         constexpr std::size_t SECOND_CHAPTER_NUMBER_MATCH_INDEX = 5;
                         std::string second_chapter = verse_regex_matches[SECOND_CHAPTER_NUMBER_MATCH_INDEX];
@@ -108,7 +112,11 @@ namespace BIBLE_DATA
                         unsigned int second_chapter_index = second_chapter_number - 1;
                         verse_range.EndingVerse.VerseNumber = BIBLE_DATA::Bible::BOOKS_BY_ID.at(first_book_id).VerseCountsByChapter.at(second_chapter_index);
                     }
+#if __EMSCRIPTEN__
+                    else if (first_delimiter_and_number[0] == ':')
+#else
                     else if (first_delimiter_and_number.starts_with(':'))
+#endif
                     {
                         constexpr std::size_t FIRST_VERSE_NUMBER_MATCH_INDEX = 6;
                         std::string first_verse = verse_regex_matches[FIRST_VERSE_NUMBER_MATCH_INDEX];

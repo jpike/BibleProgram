@@ -10,6 +10,12 @@ namespace BIBLE_DATA
             VerseNumber == rhs.VerseNumber);
         return equal;
     }
+
+    bool BibleVerseId::operator!=(const BibleVerseId& rhs) const
+    {
+        bool equal = ((*this) == rhs);
+        return !equal;
+    }
     
     bool BibleVerseId::operator<(const BibleVerseId& rhs) const
     {

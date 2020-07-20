@@ -159,7 +159,12 @@ namespace GUI
                             std::string word_and_count_text = word_and_count.first + " = " + std::to_string(verse_count);
                             
                             ImVec4 word_color = { 1.0f, 1.0f, 1.0f, 1.0f };
+#if __EMSCRIPTEN__
+                            unsigned int color_count_for_word = user_settings.ColorsByWord.count(word_and_count.first);
+                            bool word_already_has_color = (color_count_for_word > 0);
+#else
                             bool word_already_has_color = user_settings.ColorsByWord.contains(word_and_count.first);
+#endif
                             if (word_already_has_color)
                             {
                                 word_color = user_settings.ColorsByWord[word_and_count.first];
@@ -1077,7 +1082,7 @@ namespace GUI
 
                     // SKIP STORING COLORS FOR OVERLY COMMON WORDS.
 #if __EMSCRIPTEN__
-                    bool current_word_count_in_stop_words = LOWERCASE_STOP_WORDS.count(lowercase_word);
+                    unsigned int current_word_count_in_stop_words = LOWERCASE_STOP_WORDS.count(lowercase_word);
                     bool is_stop_word = (current_word_count_in_stop_words > 0);
 #else
                     bool is_stop_word = LOWERCASE_STOP_WORDS.contains(lowercase_word);
